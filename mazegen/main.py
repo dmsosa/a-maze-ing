@@ -1,8 +1,14 @@
 from pydantic import BaseModel, Field
+from enum import Enum
+
+class CellStatus(Enum):
+    EMPTY = 0
+    WALL = 1
 
 class Cell(BaseModel):
     x: int
     y: int
+    value: CellStatus
 
 class MazeGenerator(BaseModel):
     width: int = Field(gt=0, lt=120)

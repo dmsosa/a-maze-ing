@@ -27,3 +27,9 @@ write pyttest for unit testing
 Your program must handle all errors gracefully: invalid configuration, file not found, bad
 syntax, impossible maze parameters, etc. It must never crash unexpectedly, and must
 always provide a clear error message to the user.
+
+this stuff is going to implement the Eller's Agorithm to generate the maze.
+then, we take care of printing the maze itself.
+
+
+For me, it makes sense to create a pre Configuration class? It may allow me to create a Maze rather than dealing with config error identifications inside the Maze class itself, and then the Maze Generator class creation can be pretty straightforward.
