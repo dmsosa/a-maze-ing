@@ -1,25 +1,38 @@
 import sys
 
-def main() -> None:
+from mazegen.config.config import MazeConfiguration
+from mazegen.exception.maze_exception import MazeConfigException
+from mazegen.model.maze import MazeGenerator
+
+
+def parse_maze_config() -> dict[str, str]:
     argvlen: int = len(sys.argv)
     if (argvlen < 2):
         print("Usage: a_maze_ing.py [config.txt] see more docs")
         sys.exit(1)
-    after_flags: int = 1
-    config_file = argv[after_flags]
+    config_file = sys.argv[1]
     try:
         with open(config_file, 'r') as f:
             raw = f.read()
-            # Here I try to create the maze itself. If it was successfully created, I can proceed to detect the strategy used
-            # The entire logic needs to be done inside this try block? No, I can initialize the MazeGenerator as an abstract class with no info yet,
-            # then initialize it with my config file, but it means parsing stuff with validation logic, yeah, it could be good
-            # 
-    except FileNotFoundError:
-        print(f"Error: The file '{config_file}' does not exist.")
-    except PermissionError:
-        print(f"Error: Permission denied to read '{config_file}'.")
+            maze_config = MazeConfiguration.parse(raw)
+    except FileNotFoundError as e:
+        msg = "\033[31m[ERROR]:\033[0m\n"
+        msg += f"The file '{config_file}' does not exist."
+        print(f"{e}\n{msg}")
+    except PermissionError as e:
+        msg = "\033[31m[ERROR]:\033[0m\n"
+        msg += f"Permission denied to read '{config_file}'."
+        print(f"{e}\n{msg}")
+    except MazeConfigException as e:
+        print(f"\033[31mMazeConfigException\033[\n0m{e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+
+def main() -> None:
+    config = parse_maze_config()
+    maze = MazeGenerator(config)
+    
 
 
 if __name__ == "__main__":

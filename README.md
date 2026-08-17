@@ -33,3 +33,6 @@ then, we take care of printing the maze itself.
 
 
 For me, it makes sense to create a pre Configuration class? It may allow me to create a Maze rather than dealing with config error identifications inside the Maze class itself, and then the Maze Generator class creation can be pretty straightforward.
+
+
+

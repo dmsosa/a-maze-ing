@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "a_maze_ing"
+version = "0.1.0"
+description = "An amazing project"
+authors = ["Philipp Acsany <durisosa@student.42madrid.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=^3.10"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.0.0"
+
+[tool.poetry.group.test]
+optional = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

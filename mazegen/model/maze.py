@@ -1,5 +1,11 @@
-from pydantic import BaseModel, Field
 from enum import Enum
+from pydantic import BaseModel, Field
+
+
+class MazeAlgorithm(Enum):
+    DFS = "DFS"
+    HUNT_N_KILL = "HUNT_AND_KILL"
+
 
 class CellStatus(Enum):
     EMPTY = 0
@@ -15,5 +21,4 @@ class MazeGenerator(BaseModel):
     height: int = Field(gt=0, lt=120)
     entry: Cell
     exit: Cell 
-    def __init__(self, conf: str):
-        print("conf f")
+    algo: MazeAlgorithm
