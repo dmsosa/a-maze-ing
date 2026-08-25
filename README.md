@@ -1,3 +1,24 @@
+# Developer's Forewords:
+
+In computer science, maze generation is more than just fun: it’s a practical
+application of algorithms, randomness, and graph theory. Some famous algorithms used
+for maze generation, like Prim’s, Kruskal’s, or the recursive backtracker, are also used in
+real-world problems like network design or procedural content generation. Interestingly,
+perfect mazes (with one unique path between any two points) are directly related to
+spanning trees in graph theory. Building a maze, especially one you can visualize and
+share, is a great way to explore how computers can create structure from chaos, and have
+a bit of fun while doing it.
+“A labyrinth is not a place to be lost, but a path to be found.”
+
+# Learning path
+
+# Packaging a Python project
+
+The directory containing the Python files should match the project name. This simplifies the configuration and is more obvious to users who install the package.
+
+Creating the file __init__.py is recommended because the existence of an __init__.py file allows users to import the directory as a regular package, even if (as is the case in this tutorial) __init__.py is empty. [1]
+
+
 Starting a mazze ing
 
 the first question is the algorithm I am going to choose, for that, I am going to use the DFS algorithm but with the Hunt and kill variant which avoids using recursion.
@@ -36,3 +57,11 @@ For me, it makes sense to create a pre Configuration class? It may allow me to c
 
 
 
+# Resources
+
+Python Packaging User Guide: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+# ToDo
+
+Move config logic outside mazegen package
+Add santi to authors
+Mazegen needs to be built first.

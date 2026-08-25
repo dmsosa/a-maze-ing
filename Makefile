@@ -1,5 +1,6 @@
 NAME=a_maze_ing.py
 
-install
+install:
+	pip install
 run:
 	python3 $(NAME)

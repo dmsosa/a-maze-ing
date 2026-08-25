@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+
+from mazegen.src.config.utils import validate_key
 from .constants import CONFIG_KEYS, DEFAULT_CONFIG, REQUIRED_CONFIG_KEYS, SNAKE_CASE_REGEXP, VALID_ALGO
 from ..exception import raise_mc_error
 
@@ -89,23 +91,21 @@ class MazeConfiguration(BaseModel):
                 nl_count = 0
             if line[0] == "#":
                 continue
-            if not line[0].isalpha():
-                msg = "\nEvery line must start with alphabetic characters"
-                raise_mc_error(msg, i+1)
             parts = line.split("=")
             if (len(parts) != 2):
-                msg = "Bad configuration syntax, follow the rules: "
-                msg += "'KEY=VALUE'"
-                raise_mc_error(msg, i + 1, len(parts[-1]))
+                msg = "" \
+                "Bad configuration syntax, follow the rules: " \
+                "'KEY=VALUE'" \
+                ""
+                raise_mc_error(msg, i + 1, 1)
             key, value = parts
-            if key != key.upper():
-                msg = "Bad configuration syntax, key must be uppercase: "
-                msg += "'KEY=VALUE'"
-                raise_mc_error(msg, i + 1, len(key))
-            if key not in CONFIG_KEYS:
-                msg = "Unknown Maze Key, key must be one of: "
-                msg += f"{CONFIG_KEYS}"
-                raise_mc_error(msg, i + 1, len(key))
+            error_msg, index_error = validate_key(key)
+            if error_msg:
+                msg = "" \
+                "Invalid key, must one of the following: " \
+                f"{CONFIG_KEYS}" \
+                ""
+                raise_mc_error(msg, i+1, index_error)
             if len(value) < 1:
                 msg = f"Bad Maze Value, must not be NULL: {key}"
                 raise_mc_error(msg, i + 1, len(key))

@@ -1,9 +1,7 @@
-from .exception import MazeConfigException
+from .src.exception import MazeConfigException
 
 __all__ = [
     "MazeGenerator",
-    "Cell",
-    "CellStatus",
-    "mg",
     "MazeConfigException",
+    "MazeConfiguration",
 ]

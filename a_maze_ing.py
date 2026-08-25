@@ -1,13 +1,12 @@
 import sys
 
-from mazegen.config.config import MazeConfiguration
-from mazegen.exception.maze_exception import MazeConfigException
-from mazegen.model.maze import MazeGenerator
+from pydantic import BaseModel
+from mazegen import MazeConfigException, MazeConfiguration
 
 
 def parse_maze_config() -> dict[str, str]:
     argvlen: int = len(sys.argv)
-    if (argvlen < 2):
+    if (argvlen != 2):
         print("Usage: a_maze_ing.py [config.txt] see more docs")
         sys.exit(1)
     config_file = sys.argv[1]
