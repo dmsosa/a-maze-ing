@@ -8,10 +8,11 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 mazegen = { path = "./mazegen", develop = true }
-mypy = "^2.3.1"
+pydantic = "^2.13.4"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
+mypy = "^2.3.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0.0"

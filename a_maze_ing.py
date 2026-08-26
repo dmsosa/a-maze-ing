@@ -1,6 +1,5 @@
 import sys
 
-from pydantic import BaseModel
 from mazegen import MazeConfigException, MazeConfiguration
 
 
@@ -14,6 +13,7 @@ def parse_maze_config() -> dict[str, str]:
         with open(config_file, 'r') as f:
             raw = f.read()
             maze_config = MazeConfiguration.parse(raw)
+            return maze_config
     except FileNotFoundError as e:
         msg = "\033[31m[ERROR]:\033[0m\n"
         msg += f"The file '{config_file}' does not exist."
@@ -26,12 +26,12 @@ def parse_maze_config() -> dict[str, str]:
         print(f"\033[31mMazeConfigException\033[\n0m{e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+    return dict()
 
 
 def main() -> None:
-    config = parse_maze_config()
-    maze = MazeGenerator(config)
-    
+    maze_config = parse_maze_config()
+    print(maze_config)
 
 
 if __name__ == "__main__":

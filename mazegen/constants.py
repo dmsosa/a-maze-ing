@@ -1,12 +1,12 @@
 import re
 
-from ..model.maze import MazeAlgorithm
+from .model.maze import MazeAlgorithm
 
 
 SNAKE_CASE_REGEXP = re.compile(r"^[a-z0-9]+(?:_[a-zA-Z0-9]+)*\.txt$")
 
 
-DEFAULT_CONFIG: dict[str, str | None] = {
+DEFAULT_CONFIG: dict[str, str | None | int] = {
     "WIDTH": None,
     "HEIGHT": None,
     "ENTRY": None,

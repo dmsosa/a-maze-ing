@@ -1,13 +1,13 @@
 #!/bin/python3
 
 
-from typing import List, Tuple
+from typing import KeysView, List, Tuple
 
-from mazegen.src.config.constants import CONFIG_KEYS, REQUIRED_CONFIG_KEYS
-from mazegen.src.exception.maze_exception import raise_mc_error
+from mazegen.constants import REQUIRED_CONFIG_KEYS
+from mazegen.model.maze import MazeGenerator
 
 
-def validate_key(key: str) -> Tuple[str | None, int |  None]:
+def validate_key(key: str) -> Tuple[str | None, int | None]:
     """
     Check if key is included in VALID KEYS constant.
     See .mazegen.config.constants.py.
@@ -22,27 +22,28 @@ def validate_key(key: str) -> Tuple[str | None, int |  None]:
    index of first invalid letter
    :rtype: Tuple[bool, int | None]
     """
-    for i, letter in key:
+    allowed_props: KeysView[str] = MazeGenerator.__dict__.keys()
+    for i, letter in enumerate(key):
         if not letter.isalpha():
             msg = "" \
-            "Invalid key, contains non alphabetic character: " \
-            ", must one of the following: " \
-            f"{CONFIG_KEYS}" \
-            ""
-            return (msg, i)
-        if not key in CONFIG_KEYS:
+                "Invalid key, contains non alphabetic character: " \
+                ", must one of the following: " \
+                f"{allowed_props}" \
+                ""
+            return (msg, int(i))
+        if not (key in allowed_props):
             msg = "" \
-            "Invalid key, " \
-            ", must one of the following: " \
-            f"{CONFIG_KEYS}" \
-            ""
+                "Invalid key, " \
+                ", must one of the following: " \
+                f"{allowed_props}" \
+                ""
             return (msg, 1)
-        if not key in CONFIG_KEYS:
+        if not (key in allowed_props):
             msg = "" \
-            "Invalid key, " \
-            "key must be uppercase: " \
-            f"{key}" \
-            ""
+                "Invalid key, " \
+                "key must be uppercase: " \
+                f"{key}" \
+                ""
             return (msg, 1)
     return (None, None)
 
@@ -61,7 +62,6 @@ def validate_config(config: dict[str, str]) -> List[str]:
 
     missing = [
         k for k in config.keys()
-        if k not in REQUIRED_CONFIG_KEYS
+        if not (k in REQUIRED_CONFIG_KEYS)
         ]
     return missing
-
