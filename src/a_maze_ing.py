@@ -1,13 +1,15 @@
 import sys
 
-from mazegen import MazeConfigException, MazeConfiguration
-
+from config import MazeConfiguration
+from exception import MazeConfigException
+from mazegen import MazeGenerator
 
 def parse_maze_config() -> dict[str, str]:
     argvlen: int = len(sys.argv)
     if (argvlen != 2):
         print("Usage: a_maze_ing.py [config.txt] see more docs")
         sys.exit(1)
+
     config_file = sys.argv[1]
     try:
         with open(config_file, 'r') as f:
@@ -26,7 +28,8 @@ def parse_maze_config() -> dict[str, str]:
         print(f"\033[31mMazeConfigException\033[\n0m{e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-    return dict()
+
+    sys.exit(1)
 
 
 def main() -> None:

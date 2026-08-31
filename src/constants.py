@@ -1,6 +1,7 @@
 import re
+from typing import KeysView
 
-from .model.maze import MazeAlgorithm
+from mazegen import MazeAlgorithm, MazeGenerator
 
 
 SNAKE_CASE_REGEXP = re.compile(r"^[a-z0-9]+(?:_[a-zA-Z0-9]+)*\.txt$")
@@ -19,17 +20,7 @@ DEFAULT_CONFIG: dict[str, str | None | int] = {
 }
 
 
-CONFIG_KEYS = [
-    "WIDTH",
-    "HEIGHT",
-    "ENTRY",
-    "EXIT",
-    "SEED",
-    "OUTPUT_FILE",
-    "PERFECT",
-    "DISPLAY_MODE",
-    "ALGORITHM",
-]
+ALLOWED_PROPS = KeysView[str] = MazeGenerator.__dict__.keys()
 
 VALID_ALGO = [algo.value for algo in MazeAlgorithm]
 

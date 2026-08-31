@@ -3,8 +3,8 @@
 
 from typing import KeysView, List, Tuple
 
-from mazegen.constants import REQUIRED_CONFIG_KEYS
-from mazegen.model.maze import MazeGenerator
+from constants import REQUIRED_CONFIG_KEYS
+from mazegen import MazeGenerator
 
 
 def validate_key(key: str) -> Tuple[str | None, int | None]:

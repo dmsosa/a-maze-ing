@@ -1,8 +1,8 @@
 from typing import KeysView
 
-from mazegen.config.validation import validate_key
-from mazegen.model.maze import MazeGenerator
-from ..exception import raise_mc_error
+from .validation import validate_key
+from mazegen import MazeGenerator
+from exception import raise_mc_error
 
 
 class MazeConfiguration():

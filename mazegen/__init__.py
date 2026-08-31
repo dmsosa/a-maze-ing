@@ -1,7 +1,6 @@
-from .exception import MazeConfigException
-from .config import MazeConfiguration
+from model.maze import MazeGenerator, MazeAlgorithm
 
 __all__ = [
-    "MazeConfigException",
-    "MazeConfiguration",
+    "MazeGenerator",
+    "MazeAlgorithm",
 ]

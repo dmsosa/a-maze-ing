@@ -65,3 +65,5 @@ Python Packaging User Guide: https://packaging.python.org/en/latest/tutorials/pa
 Move config logic outside mazegen package
 Add santi to authors
 Mazegen needs to be built first.
+Makefile debug rule.
+Makefile test to run tests.

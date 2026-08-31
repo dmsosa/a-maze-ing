@@ -289,20 +289,6 @@ files = [
 ]
 
 [[package]]
-name = "mazegen"
-version = "0.1.0"
-description = "A maze generator"
-optional = false
-python-versions = "^3.10"
-groups = ["main"]
-files = []
-develop = true
-
-[package.source]
-type = "directory"
-url = "mazegen"
-
-[[package]]
 name = "mccabe"
 version = "0.7.0"
 description = "McCabe checker, plugin for flake8"
@@ -758,4 +744,4 @@ typing-extensions = ">=4.15.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "2814b2449f87c27e5ab51c636a5db9f3424d1ac528b5e5d7631fed41703ea637"
+content-hash = "7411dcf3eab472626e92979f494d754c48bb5ae6eecea99141397370dfdf4820"
