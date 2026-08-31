@@ -33,7 +33,9 @@ but, how I am going to manae the dependdencies of my project, should I use a req
 
 # The flow of the program:
 
-My first idea is: I receive a config.txt file, after parsing it I can initialize my MazeGenerator class.
+My first idea is: I receive a config.txt file, 
+whicih is going to be parsed by MazeConfiguration class in order to create a MazeConfiguration object via its init method. After parsing it I can initialize my MazeGenerator class using the properties that my maze_config has.
+
 My main function is where? it is going to be in the a_maze_ing.py file. Which checks how many arguments you pass me, tries to find config.txt if not found, and throw error if no file was found.
 
 The first challenge: read 

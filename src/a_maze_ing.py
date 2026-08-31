@@ -2,9 +2,9 @@ import sys
 
 from config import MazeConfiguration
 from exception import MazeConfigException
-from mazegen import MazeGenerator
 
-def parse_maze_config() -> dict[str, str]:
+
+def parse_maze_config() -> "MazeConfiguration":
     argvlen: int = len(sys.argv)
     if (argvlen != 2):
         print("Usage: a_maze_ing.py [config.txt] see more docs")
@@ -14,8 +14,8 @@ def parse_maze_config() -> dict[str, str]:
     try:
         with open(config_file, 'r') as f:
             raw = f.read()
-            maze_config = MazeConfiguration.parse(raw)
-            return maze_config
+            config_dict = MazeConfiguration.parse(raw)
+            return MazeConfiguration(**config_dict)
     except FileNotFoundError as e:
         msg = "\033[31m[ERROR]:\033[0m\n"
         msg += f"The file '{config_file}' does not exist."
@@ -28,7 +28,6 @@ def parse_maze_config() -> dict[str, str]:
         print(f"\033[31mMazeConfigException\033[\n0m{e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-
     sys.exit(1)
 
 

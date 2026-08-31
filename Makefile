@@ -1,4 +1,5 @@
 NAME=a_maze_ing.py
+CONFIG_FILE=config.txt
 
 build-mazegen:
 	@echo "\033[1;34mBuilding mazegen package...\033[0m"
@@ -13,8 +14,8 @@ install: build-mazegen
 
 run:
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		echo "Correct: VIRTUAL_ENV is set. Running program."; \
-		python3 ./src/$(NAME); \
+		echo "\033[1;33mCorrect: VIRTUAL_ENV is set. Running program...\n\033[0m"; \
+		python3 ./src/$(NAME) $(CONFIG_FILE); \
 	else \
 		echo "Error: VIRTUAL_ENV is not set. Please activate your virtual environment first."; \
 		echo "`make install` or `poetry activate`"; \
