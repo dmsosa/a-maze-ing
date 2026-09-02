@@ -101,7 +101,14 @@ class MazeConfiguration(BaseModel):
             error_msg, index_error = MazeConfiguration.validate_key(key)
             if error_msg:
                 raise_mc_error(error_msg, i+1, index_error)
-            config[key.lower()] = value
+            if not key.lower() in config.keys():
+                config[key.lower()] = value
+            else:
+                msg = "" \
+                    "\nDuplicated key for MazeConfiguration: " \
+                    f"{key} was given more than once (1)." \
+                    ""
+                raise_mc_error(msg, i + 1, 1)
         return config
 
     @staticmethod
@@ -146,7 +153,6 @@ class MazeConfiguration(BaseModel):
                     f"{allowed_keys}" \
                     ""
                 return (msg, 1)
-
         return (None, None)
 
     @model_validator(mode="after")

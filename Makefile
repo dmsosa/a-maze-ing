@@ -18,7 +18,7 @@ run:
 		python3 ./src/$(NAME) $(CONFIG_FILE); \
 	else \
 		echo "Error: VIRTUAL_ENV is not set. Please activate your virtual environment first."; \
-		echo "`make install` or `poetry activate`"; \
+		echo "make install or poetry activate"; \
 		echo "make install."; \
 		exit 1; \
 	fi

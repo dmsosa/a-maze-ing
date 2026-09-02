@@ -8,7 +8,6 @@ authors = [
   {name = "sasilves", email = "sasilves@student.42madrid.com"},
 ]
 readme = "README.md"
-packages =[{ include = "*" }]
 license = "MIT"
 keywords = ["egg", "bacon", "sausage", "tomatoes", "Lobster Thermidor"]
 requires-python = ">=3.10"

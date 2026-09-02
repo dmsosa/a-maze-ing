@@ -1,7 +1,11 @@
 import sys
 
 from config import MazeConfiguration
+from config.config import RenderMode
 from exception import MazeConfigException
+from mazegen import MazeGenerator
+
+from render.render_ascii import MazeRendererASCII
 
 
 def parse_maze_config() -> "MazeConfiguration":
@@ -33,7 +37,11 @@ def parse_maze_config() -> "MazeConfiguration":
 
 def main() -> None:
     maze_config = parse_maze_config()
-    print(maze_config)
+    maze = MazeGenerator(**maze_config.model_dump())
+    maze.generate()
+    if maze_config.render_mode == RenderMode.ASCII:
+        render = MazeRendererASCII()
+    render.render(maze)
 
 
 if __name__ == "__main__":
