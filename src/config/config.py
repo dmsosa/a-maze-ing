@@ -1,6 +1,11 @@
 #!/bin/python3
 from enum import Enum
-from typing import Any, List, Optional, Set, Tuple
+from functools import lru_cache
+import re
+from typing import Any, Optional, Set, Tuple
+from config.utils import DEFAULT_COORD, DEFAULT_COORD_STR, random_coord, valid_coord
+from constants import KEY_REGEXP
+from exception.config_exception import MazeConfigException
 from mazegen import MazeAlgorithm
 from pydantic import BaseModel, Field, field_validator, model_validator
 from exception import raise_mc_error
@@ -8,63 +13,50 @@ from exception import raise_mc_error
 
 class RenderMode(Enum):
     ASCII = "ascii"
-    OTHER = "other"
+    MINILIBX = "mlx"
 
 
 class MazeConfiguration(BaseModel):
-    width: int = Field(..., ge=8, le=120)
-    height: int = Field(..., ge=8, le=120)
-    entry: Optional[Tuple[int, int]] = None
-    exit: Optional[Tuple[int, int]] = None
+    width: int = Field(default=25, ge=8, le=500)
+    height: int = Field(default=25, ge=8, le=500)
+    entry: Tuple[int, int] = Field(default=(0,0))
+    exit: Tuple[int, int] = Field(default=(0,0))
     algorithm: MazeAlgorithm
     seed: int
     output_file: str = Field(
                             default="output.txt",
-                            pattern=r"^[a-zA-Z0-9]\.txt$"
+                            pattern=r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*\.txt$"
                             )
+    config_file: str = Field(
+                            default="config_file.txt",
+                            pattern=r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*\.txt$"
+    )
     perfect: bool
     render_mode: RenderMode = RenderMode.ASCII
+    delay: float = Field(default=0.5, ge=0.0, le=30.0)
+    pretty: bool = True
+    animated: bool = True
+    color: bool = False
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
-    @field_validator("entry", "exit", mode="before")
     @classmethod
-    def validate_coords(cls, value: Any) -> Any:
-        if isinstance(value, str):
-            coord = value.split(",")
-            if len(coord) != 2:
-                msg = "" \
-                    "Invalid value for coordinates," \
-                    " must follow the pattern (int, int)" \
-                    f" received: '{coord}'" \
-                    ""
-                raise ValueError(msg)
-            try:
-                x = int(coord[0].strip())
-                y = int(coord[1].strip())
-                return (x, y)
-            except ValueError:
-                msg = "" \
-                    "Invalid value for coordinates," \
-                    "must be integers (int, int)," \
-                    f" received: '{coord}'" \
-                    ""
-                raise ValueError(msg)
-        return value
-
-    @classmethod
+    @lru_cache
     def allowed_keys(cls) -> Set[str]:
         return set(cls.__annotations__.keys())
 
     @staticmethod
     def parse(raw: str) -> dict[str, Any]:
         """
-        Reads configuration file and check following errors:
+        Reads configuration file, returns a dictionary.
+        Check following errors:
         - Syntax errors
         - key contains not alphanumeric chars
         - key is not included in MazeConfiguration properties
         - key is not uppercase
+        Check if keys are missing and informs the user about it
+
 
         :param str raw: Config file's content to be read (just raw bytes)
         :return: Returns dictionary with keys and values,
@@ -109,7 +101,77 @@ class MazeConfiguration(BaseModel):
                     f"{key} was given more than once (1)." \
                     ""
                 raise_mc_error(msg, i + 1, 1)
+        # Necessary try convert width and height to integers
+        # To be used by parse_coords later.
+        MazeConfiguration.check_missing_keys(config)
+        try:
+            config["width"] = int(config["width"])
+            config["height"] = int(config["height"])
+        except ValueError as e:
+            raise_mc_error(
+                    f"Error during parsing process: {e}",
+                    i
+                )
+        if isinstance(config["entry"], str):
+            config["entry"] = MazeConfiguration.parse_coords(config.get("entry"))
+        if isinstance(config["exit"], str):
+            config["exit"] = MazeConfiguration.parse_coords(config.get("exit"))
+        if not valid_coord(
+            config["entry"],
+            config["width"],
+            config["height"]
+            ):
+            print(
+                f"Coordinate out of bounds: {config['entry']} \
+                redirectig to the origin (0,0)."
+            )
+            config["entry"] = DEFAULT_COORD
+        if not valid_coord(
+            config["exit"],
+            config["width"],
+            config["height"]
+            ):
+            print(
+                f"Coordinate out of bounds: {config['exit']} \
+                redirectig to the origin (0,0)."
+            )
+            config["exit"] = DEFAULT_COORD
+
+        if config["entry"] == config["exit"]:
+            print(
+                f"entry and exit are equal, redirecting \
+                the exit to a random coordinate within the maze"
+                )
+            while config["entry"] == config["exit"]:
+                config["exit"] = random_coord(config["width"], config["height"])
+            print(f"exit redirected to coordinate: {config['exit']}")
         return config
+    
+    @staticmethod
+    def parse_coords(value: str) -> tuple[int, int]:
+        coord = value.split(",")
+        if len(coord) != 2:
+            msg = "" \
+                "Invalid value for coordinates," \
+                " must follow the pattern (int, int)" \
+                f" received: '{coord}'\n" \
+                "using default value: (0, 0)" \
+                ""
+            print(msg)
+            return (0, 0)
+        try:
+            x = int(coord[0])
+            y = int(coord[1])
+            return (x, y)
+        except ValueError:
+            msg = "" \
+                "Invalid value for coordinates," \
+                "must be integers (int, int)," \
+                f" received: '{coord}'" \
+                "using default value: (0, 0)" \
+                ""
+            raise MazeConfigException(msg)               
+
 
     @staticmethod
     def validate_key(key: str) -> Tuple[str | None, int | None]:
@@ -132,7 +194,7 @@ class MazeConfiguration(BaseModel):
             for key in MazeConfiguration.allowed_keys()
             ]
         for i, letter in enumerate(key):
-            if not letter.isalpha():
+            if not re.match(KEY_REGEXP, letter):
                 msg = "" \
                     f"Invalid key '{key}'," \
                     " contains non alphabetic character," \
@@ -155,56 +217,44 @@ class MazeConfiguration(BaseModel):
                 return (msg, 1)
         return (None, None)
 
-    @model_validator(mode="after")
-    def validate_config(self) -> "MazeConfiguration":
-        for name, coord in (
-                    ("entry", self.entry),
-                    ("exit", self.exit)
-                ):
-            if coord is not None:
-                x, y = coord
-                if not (0 <= x < self.width):
-                    msg = "" \
-                        f"{name} has coordinates out of bounds," \
-                        f" received (>>{x}<<,{y}) (width={self.width})" \
-                        ""
-                    raise ValueError(msg)
-                if not (0 <= y < self.height):
-                    msg = "" \
-                        f"{name} has coordinates out of bounds," \
-                        f" received ({x},>>{y}<<) (height={self.height})" \
-                        ""
-                    raise ValueError(msg)
-            elif name == "exit":
-                self.exit = (self.width - 1, self.height - 1)
-            else:
-                self.entry = (0, 0)
-        return self
+    @staticmethod
+    def check_missing_keys(config_dict: dict[str, str]) -> None:
+        model_fields = MazeConfiguration.model_fields
+        for name, field in model_fields.items():
+            if name not in config_dict:
+                config_dict[name] = field.default
+                print(f"Option '{name}' not found, using default: {field.default}")
 
+    def validate_coords(
+                        name: str,
+                        value: tuple[int, int],
+                        w: int,
+                        h: int
+                        ):
+        # If coordinates are out of bounds, redirect them to zero
+        if not valid_coord(
+            value,
+            w,
+            h
+            ):
+            print(
+                f"Entry coordinate out of bounds: {name}, \
+                redirecting it to the origin: (0,0)"
+                )
+            return DEFAULT_COORD
 
-DEFAULT_CONFIG: dict[str, str | None | int] = {
-    "WIDTH": None,
-    "HEIGHT": None,
-    "ENTRY": None,
-    "EXIT": None,
-    "SEED": 3,
-    "OUTPUT_FILE": "maze_output.txt",
-    "PERFECT": False,
-    "DISPLAY_MODE": "ASCII",
-    "ALGORITHM": "DFS",
-}
-
-
-VALID_ALGO:  List[str] = [algo.value for algo in MazeAlgorithm]
-
-
-REQUIRED_CONFIG_KEYS = [
-    "WIDTH",
-    "HEIGHT"
-]
-
-
-COORD_KEYS = [
-    "ENTRY",
-    "EXIT"
-]
+    @staticmethod
+    @lru_cache
+    def default_config() -> "MazeConfiguration":
+        return MazeConfiguration(
+            width=25,
+            height=25,
+            entry=(0, 0),
+            exit=(24, 24),
+            algorithm=MazeAlgorithm.HUNT_AND_KILL,
+            seed=3,
+            output_file="maze_output.txt",
+            perfect=False,
+            render_mode=RenderMode.ASCII,
+        )
+    

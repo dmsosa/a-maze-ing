@@ -7,10 +7,10 @@ build-mazegen:
 
 install: build-mazegen
 	@echo "\033[1;34mInstalling dependencies...\033[0m"
-	@poetry install
+	@poetry install --with test
 	@echo "\n\033[1;32m✓ Done!\033[0m"
-	@echo "\n\033[1;33mTo activate the virtual environment, run:\033[0m"
-	@echo "\033[1;36m  source $(shell poetry env activate)\033[0m\n"
+	@echo "\n\033[1;33mTo activate the virtual environment, run source:\033[0m"
+	@echo "\033[1;36m  $(shell poetry env activate)\033[0m\n"
 
 run:
 	@if [ -n "$$VIRTUAL_ENV" ]; then \

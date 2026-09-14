@@ -57,15 +57,146 @@ then, we take care of printing the maze itself.
 
 For me, it makes sense to create a pre Configuration class? It may allow me to create a Maze rather than dealing with config error identifications inside the Maze class itself, and then the Maze Generator class creation can be pretty straightforward.
 
+#  Render part
+Key Characters for ASCII Mazes
+Common characters used to represent maze elements include:
+
+Walls: #, █, ■
+Paths: , ., .
+Start/End: S, E, *
+Corners: +, ┌, ┐, └, ┘ 
 
 
 # Resources
 
 Python Packaging User Guide: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+
+Printing mazes with Ascii
+
+https://codereview.stackexchange.com/questions/263517/more-efficient-way-to-create-an-ascii-maze-using-box-characters
+
+Print a maze using only two characters
+https://stackoverflow.com/questions/55452329/print-a-maze-using-only-two-characters
+
 # ToDo
 
 Move config logic outside mazegen package
 Add santi to authors
 Mazegen needs to be built first.
 Makefile debug rule.
-Makefile test to run tests.
+Makefile test to run tests
+
+
+# Rendering the maze 
+Create maze renderer with ascii characters only
+If I decide to take into account both 4 sides, I need to have 
+
+.=.=======.
+| |       |
+|     .=. |
+|     | | |
+.=====| 
+|     
+.=========.
+
+**********
+|  |  *     *
+└──┘  *  *
+*E *  *  *
+* S*  *  *
+*     *  *
+**********
+
+
+// Source - https://codereview.stackexchange.com/a/263520
+// Posted by Olivier Jacot-Descombes, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-09-05, License - CC BY-SA 4.0
+
+char[] walls = {
+//   0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
+    '*', '─', '│', '┌', '│', '└', '│', '├', '─', '─', '┐', '┬', '┘', '┴', '┤', '┼' 
+};
+
+int index = (curNorth ? 1 : 0) + 
+            (curWest ? 2 : 0) + 
+            (nextEast ? 4 : 0) + 
+            (nextSouth ? 8 : 0);
+char corner = walls[index];
+
+
+
+[┌][─][┐]
+[|][*][|]
+[└][─][┘]
+[┌][─][┐]
+[|][*][|]
+[└][─][┘]
+[┌][─][┐]
+[|][*][|]
+[└][─][┘]
+[┌][─][┐]
+[|][*][|]
+[└][─][┘]
+[┌][─][┐]
+[|][*][|]
+[└][─][┘]
+[┌][─][┐]
+[|][*][|]
+[└][─][┘]
+
+then displays the grid once is built is easy
+for y in height
+    i = 0
+    for x in width
+        j = 0
+        while j < cellSize
+            row += grid[y*i][x+j]
+            i++
+            j++
+
+For box-drawing characters (─ │ ┌ ┐ ┬ ┼ etc.) instead, see the related Code Review thread, which uses a 4-bit lookup table to pick the correct corner/junction character.
+
+maybe I need to take care of the four corners?
+or only one corner.
+
+# EventEmitter pattern:
+
+
+Good call, actually — decoupling the renderer from Cell/Direction/Maze internals and pinning it to one stable contract (list[str] of hex rows) means you could swap MazeGenerator's internal cell representation entirely later without touching the renderer at all. Since Maze.digits is already a @property computed fresh from cells each time, emitting it on every "cell_updated" event costs you nothing extra architecturally — it's just generator.digits read at call time, no new generator method needed.
+
+
+# Exception Handling
+
+Why this works
+Signal	What happens	Where it's caught
+Ctrl+C during input()	input() raises KeyboardInterrupt	Inner try/except
+Ctrl+C during processing	Propagates up	Outer try/except
+Ctrl+D during input()	input() raises EOFError	Inner try/except
+Piped input ends (e.g. cat file | python3 prog.py)	Also EOFError	Same place
+
+Key practices
+Catch KeyboardInterrupt and EOFError together around input() — they both mean "stop reading."
+Use exit code 130 for Ctrl+C (128 + SIGINT(2)), 0 for clean exit, 1 for errors. This is the Unix convention.
+Don't catch KeyboardInterrupt silently — at minimum print a message so the user knows the program didn't crash.
+Keep the outer try/except as a safety net for interrupts that fire between prompts (during your processing logic).
+Avoid signal.signal for simple input programs — the try/except approach is simpler and handles the common case perfectly. Reserve the signal-flag pattern for long-running servers or multi-threaded apps where you need graceful shutdown of resources (DB pools, sockets, etc.).
+This two-layer try/except is the idiomatic, minimal solution for input-driven CLI programs.
+
+# To Do
+
+Handle uncomplete config.txt file, by providing default values, what else could I do to handle missing configuration?
+could be cool to indicate the user which fields are missing, and then informing that we are using default values.
+
+
+    I NEED TO MAKE THE CONFIG ABLE TO RECEIVE CONFIG FILE NAMES WITHOUT BEING LOWERCASE. 
+    ALSO, I WANT TO MAKE THE INTERACTIVE MENU, OPTIONS ARE 
+    CHANGE CONFIGURATION , SHOWS CURRENT CONFIG OBJECT AND ALLOWS TO CHANGE THEIR VALUES 
+    3. GENERATE NEW MAZE 
+    4. SHOWING THAT MY 42 CAN NOT BE PRINTED IN THE CURRENT MAZE 
+    5. SHOWING THAT I RECEIVED INVALID INPUT AND DEFAULT VALUE IS BEING USED 
+    2. SHOW AND HIDE SOLUTION , CHANGE THEME 
+    1. FOR INT FIELDS, CHECK IF THEY ARE ALSO NOT BOOLENS 
+    5. I NEED TO handle permission errors and errors related to file management 
+    Add number of stepts that the maze make,
+    put a chronometer
+    put the number of steps made by the user

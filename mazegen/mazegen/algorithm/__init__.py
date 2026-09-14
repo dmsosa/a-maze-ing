@@ -1,12 +1,15 @@
 
 from mazegen.algorithm.base import MazeAlgorithmStrategy
 from mazegen.algorithm.huntkill import HuntKillAlgorithm
+from mazegen.algorithm.recursive_backtracker import RecursiveBacktrackerAlgorithm
+from mazegen.algorithm.prim import PrimAlgorithm
 from mazegen.model.constants import MazeAlgorithm
 
 
 ALGORITHM_MAP: dict[MazeAlgorithm, MazeAlgorithmStrategy] = {
-    MazeAlgorithm.HUNT_N_KILL: HuntKillAlgorithm(),
-    MazeAlgorithm.DFS: HuntKillAlgorithm(),
+    MazeAlgorithm.HUNT_AND_KILL: HuntKillAlgorithm(),
+    MazeAlgorithm.DFS: RecursiveBacktrackerAlgorithm(),
+    MazeAlgorithm.PRIM: PrimAlgorithm(),
 }
 
 

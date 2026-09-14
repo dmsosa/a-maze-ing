@@ -12,10 +12,9 @@ def raise_mc_error(
                 line: int | None = None,
                 col: int | None = None
                 ) -> None:
-    msg = ""
+    msg = main_msg
     if line:
-        msg += f"line: {line}"
+        msg += f", line: {line}"
     if col:
         msg += f", column: {col}\n"
-    msg += main_msg
     raise MazeConfigException(msg)

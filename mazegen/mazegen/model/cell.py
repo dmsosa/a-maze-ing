@@ -23,8 +23,16 @@ OPPOSITE: dict[Direction, Direction] = {
     Direction.W: Direction.E,
 }
 
+WALL_WEIGHTS: dict[Direction, int] = {
+    Direction.N: 1,
+    Direction.E: 2,
+    Direction.S: 4,
+    Direction.W: 8,
+}
+
 
 def closed_walls() -> dict[Direction, bool]:
+    """Returns a new dictionary: True means a closed wall."""
     walls: dict[Direction, bool] = {}
 
     for direction in Direction:
@@ -38,3 +46,15 @@ class Cell(BaseModel):
     y: int = Field(ge=0)
     walls: dict[Direction, bool] = Field(default_factory=closed_walls)
     blocked: bool = False
+
+    def has_wall(self, direction: Direction) -> bool:
+        """True means a closed wall"""
+        return self.walls[direction]
+
+    def ctoh(self) -> str:
+        """Return a character between 0 and F without modifying the cell"""
+        value: int = 0
+        for direction in Direction:
+            if self.has_wall(direction):
+                value += WALL_WEIGHTS[direction]
+        return format(value, "X")
