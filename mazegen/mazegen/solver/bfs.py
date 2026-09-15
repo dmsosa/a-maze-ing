@@ -5,20 +5,25 @@ if TYPE_CHECKING:
     from ..model.maze import Maze
 
 
-def solve_bfs(maze: "Maze") -> str:
+def solve_bfs(
+    maze: "Maze",
+    start: tuple[int, int] | None = None,
+    end: tuple[int, int] | None = None,
+    ) -> str:
     """
-    Solve a maze using the Breadth-First Search algorithm.
+    Find a path using Breadth-First Search.
 
-    Exploration phase:
-        Explore open neighboring cells level by level using a queue.
-
-    Search phase:
-        Visit all reachable cells in increasing distance from the start.
-
-    Repeat until the exit is reached, then reconstruct the shortest path.
+    By default, solve from the maze entry to the maze exit.
+    Custom start and end positions can also be provided.
     """
-    start = maze.entry
-    end = maze.exit
+    start = maze.entry if start is None else start
+    end = maze.exit if end is None else end
+
+    start_cell = maze.get_cell(*start)
+    end_cell = maze.get_cell(*end)
+
+    if start_cell.blocked or end_cell.blocked:
+        raise ValueError("Start and end must be available cells")
 
     queue = [start]
     index = 0

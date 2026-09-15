@@ -1,6 +1,8 @@
 from collections import defaultdict
 from typing import Callable, Tuple
 from pydantic import BaseModel, Field, PrivateAttr
+
+from constants import SNAKE_CASE_REGEXP
 from .cell import DELTAS, Direction
 from .constants import MazeAlgorithm
 from ..algorithm import get_algorithm
@@ -8,6 +10,7 @@ from .maze import Maze
 import random
 from ..pattern.forty_two import FORTY_TWO_PATTERN
 from ..pattern.utils import centered_positions
+from .cell import DELTAS, Direction
 
 
 class EventEmitter(BaseModel):
@@ -65,6 +68,7 @@ class MazeGenerator(EventEmitter):
     algorithm: MazeAlgorithm
     seed: int | None = None
     perfect: bool = True
+    output_file: str = Field(default="output.txt", pattern=SNAKE_CASE_REGEXP)
     maze: Maze | None = None
 
     def generate(self) -> "Maze":
@@ -98,7 +102,6 @@ class MazeGenerator(EventEmitter):
         # Passing self to algorithm itself
         # to be able to emit events while executing
         strategy.generate_algorithm(self, self.maze)
-
         if not self.perfect:
             self.make_imperfect(self.maze)
         self.emit(
@@ -108,24 +111,6 @@ class MazeGenerator(EventEmitter):
             info=None
             )
         return self.maze
-
-    def find_dead_ends(
-            self,
-            maze: "Maze",
-    ) -> list[tuple[int, int]]:
-        dead_ends: list[tuple[int, int]] = []
-
-        for y in range(maze.height):
-            for x in range(maze.width):
-                cell = maze.get_cell(x, y)
-
-                if cell.blocked:
-                    continue
-
-                if len(maze.get_open_neighbors(x, y)) == 1:
-                    dead_ends.append((x, y))
-
-        return dead_ends
 
     def would_create_open_3x3(
         self,
@@ -210,45 +195,74 @@ class MazeGenerator(EventEmitter):
     def make_imperfect(
         self,
         maze: "Maze",
-    ) -> None:
-        loops_added = 0
+        ) -> None:
+        candidates: list[tuple[int, int, Direction]] = []
+        available_cells = 0
 
-        while len(self.find_dead_ends(maze)) > 2:
-            dead_ends = self.find_dead_ends(maze)
-            random.shuffle(dead_ends)
-
-            opened = False
-
-            for x, y in dead_ends:
+        for y in range(maze.height):
+            for x in range(maze.width):
                 cell = maze.get_cell(x, y)
 
-                candidates = [
-                    direction
-                    for direction, _ in maze.get_available_neighbors(x, y)
-                    if (
-                        cell.has_wall(direction)
-                        and not self.would_create_open_3x3(
-                            maze,
-                            x,
-                            y,
-                            direction,
-                        )
-                    )
-                ]
-
-                if not candidates:
+                if cell.blocked:
                     continue
 
-                direction = random.choice(candidates)
+                available_cells += 1
 
-                maze.remove_wall(x, y, direction)
+                for direction, _ in maze.get_available_neighbors(x, y):
+                    if direction not in (Direction.E, Direction.S):
+                        continue
 
-                loops_added += 1
-                opened = True
+                    if cell.has_wall(direction):
+                        candidates.append((x, y, direction))
+
+        random.shuffle(candidates)
+
+        target_openings = max(1, available_cells // 20)
+        opened = 0
+
+        for x, y, direction in candidates:
+            if self.would_create_open_3x3(
+                maze,
+                x,
+                y,
+                direction,
+            ):
+                continue
+
+            maze.remove_wall(x, y, direction)
+            opened += 1
+            self.emit("cell_updated", generator=self, maze=self.maze, info=dict())
+            if opened >= target_openings:
                 break
 
-            if not opened:
-                break
+        if opened == 0:
+            raise ValueError("Could not create an imperfect maze")
 
-    def output(self) -> str:
-        return "opela"
+    def output_text(self) -> str:
+        """Return the output format required by the subject."""
+
+        maze_rows = "\n".join(self.maze.hex_digits)
+
+        entry_x, entry_y = self.entry
+        exit_x, exit_y = self.exit
+
+        return (
+            f"{maze_rows}\n\n"
+            f"{entry_x},{entry_y}\n"
+            f"{exit_x},{exit_y}\n"
+            f"{directions}\n"
+        )
+
+    def export_maze(
+        self) -> None:
+        """Write a generated maze and its solution to a file."""
+
+        content = self.output_text()
+
+        with open(
+            self.output_file,
+            "w",
+            encoding="utf-8",
+            newline="\n",
+        ) as file:
+            file.write(content)

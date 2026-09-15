@@ -192,11 +192,32 @@ could be cool to indicate the user which fields are missing, and then informing 
     ALSO, I WANT TO MAKE THE INTERACTIVE MENU, OPTIONS ARE 
     CHANGE CONFIGURATION , SHOWS CURRENT CONFIG OBJECT AND ALLOWS TO CHANGE THEIR VALUES 
     3. GENERATE NEW MAZE 
-    4. SHOWING THAT MY 42 CAN NOT BE PRINTED IN THE CURRENT MAZE 
-    5. SHOWING THAT I RECEIVED INVALID INPUT AND DEFAULT VALUE IS BEING USED 
     2. SHOW AND HIDE SOLUTION , CHANGE THEME 
     1. FOR INT FIELDS, CHECK IF THEY ARE ALSO NOT BOOLENS 
     5. I NEED TO handle permission errors and errors related to file management 
     Add number of stepts that the maze make,
     put a chronometer
     put the number of steps made by the user
+
+    // 14 sept
+    as for today, the program depends on play manager while loop, now, it can provide an option for navigating through functions, it has the function edit maze configuration, which is going to edit fields over the config object, initialize a new maze generator cleaning the previous one, and re generate the maze.
+
+    when the user presses enter, I need to move the cursor where the menu begins, print the configuration menu, how to pad the configuration menus to the same height?
+
+    while editing config, handle key up and down to be able to switch opitions, for that reason
+
+    for that you use the Menu class for access rthe selected option, and when you press enter, you call a function
+
+    IN OR
+    // 15 sept
+    as for today
+    the program needs to show the solution, once I ave the solution, i can show it  via the state mask array, but when I want the
+
+    SHOWING THE SOLUTION:
+    WHERE: IN THE MAZE
+    WHEN: when the boolean value render.show_solution is True, or whether my render receives an optional array of tuples that is the solution. 
+    WHERE the solution is? It is found by the MazeSolver class, which takes an entry, an exit, the representation in hexadecimal digits
+    then the array with solution is going to be provided by the maze generator ALWAYS 
+
+
+    the program now renders a maze but I need to make it able to enter into a while loop after displaying an options menu.

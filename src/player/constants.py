@@ -7,6 +7,8 @@ MAIN_INSTRUCTION = "Type 'quit' to exit, Ctrl+C to interrupt, Ctrl+D for EOF."
 
 # Reset
 RESET = "\033[0m"
+HIDE_CURSOR = "\033[?25l"
+SHOW_CURSOR = "\033[?25h"
 
 # Regular colors (bright)
 BLACK   = "\033[30m"

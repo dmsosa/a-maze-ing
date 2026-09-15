@@ -5,20 +5,19 @@ if TYPE_CHECKING:
     from ..model.maze import Maze
 
 
-def solve_dfs(maze: "Maze") -> str:
-    """
-    Solve a maze using the Depth-First Search algorithm.
+def solve_dfs(
+    maze: "Maze",
+    start: tuple[int, int] | None = None,
+    end: tuple[int, int] | None = None,
+) -> str:
+    start = maze.entry if start is None else start
+    end = maze.exit if end is None else end
 
-    Exploration phase:
-        Move through unvisited open neighbors using a stack.
+    start_cell = maze.get_cell(*start)
+    end_cell = maze.get_cell(*end)
 
-    Backtracking phase:
-        Return to previous cells when no new path is available.
-
-    Repeat until the exit is reached.
-    """
-    start = maze.entry
-    end = maze.exit
+    if start_cell.blocked or end_cell.blocked:
+        raise ValueError("Start and end must be available cells")
 
     stack = [start]
 

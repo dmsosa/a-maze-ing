@@ -15,22 +15,19 @@ def heuristic(
     return abs(x1 - x2) + abs(y1 - y2)
 
 
-def solve_astar(maze: "Maze") -> str:
-    """
-    Solve a maze using the A* Search algorithm.
+def solve_astar(
+    maze: "Maze",
+    start: tuple[int, int] | None = None,
+    end: tuple[int, int] | None = None,
+) -> str:
+    start = maze.entry if start is None else start
+    end = maze.exit if end is None else end
 
-    Exploration phase:
-        Explore open neighboring cells using their estimated cost.
+    start_cell = maze.get_cell(*start)
+    end_cell = maze.get_cell(*end)
 
-    Evaluation phase:
-        Prioritize cells using the distance already traveled
-        and the estimated distance to the exit.
-
-    Repeat until the exit is reached, then reconstruct the shortest path.
-    """
-
-    start = maze.entry
-    end = maze.exit
+    if start_cell.blocked or end_cell.blocked:
+        raise ValueError("Start and end must be available cells")
 
     open_set = [start]
 

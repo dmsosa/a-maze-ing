@@ -6,7 +6,6 @@ from typing import Any, List, Tuple
 from mazegen import Maze, MazeGenerator
 from player.constants import BOLD, RESET
 from exception.render_exception import RenderError
-from player.utils import get_key
 from render.ascii.constants import RENDER_THEMES_CHARS, CORNER_CHARS, RENDER_THEMES_COLORS
 from render.ascii.grid import has_wall, wall_go_to
 from .utils import cursor_home, hex_to_ansi_bg, hex_to_ansi_fg, hide_cursor, show_cursor
@@ -43,55 +42,30 @@ class MazeRendererASCII(MazeRenderer):
             )
         self._render_count += 1
         if self._render_count == 1:
-            self.clear_screen()
             hide_cursor()
             generator.on("maze_completed", lambda **kwargs : self.render_clean_up(**kwargs))
         cursor_home()
-        self._build_display_grid(maze.hex_digits, info)
+        event_type = info.get("event_type", "cell_updated")
+        if event_type == "cell_updated":
+            self._build_display_grid(maze.hex_digits, info)
+            self._cell_state_mask = self._build_cell_state_mask(maze.width, maze.height, info)
+        else:
+            self._cell_state_mask = self._build_cell_state_mask(maze.width, maze.height, info)
         if self.color:
             self._print_grid_colorized(info)
         else:
-            self._print_grid()
+            self._print_grid(info)
         if self._frame_delay > 0:
             sleep(self._frame_delay)
 
     def render_clean_up(self, **kwargs: dict[str, Any]) -> None:
-        show_cursor()
-
-    def render_menu(self) -> str:
-        return self._menu_ansi() if self.color else self._menu_ascii()
-
-    def _menu_options_text(self) -> list[str]:
-        return ["1. Play", "2. Generate a new maze", "3. Exit"]
-
-    def _menu_ascii(self) -> str:
-        lines = ["+" + "-" * 35 + "+", "|{:^35}|".format("MENU"), "+" + "-" * 35 + "+"]
-        lines += ["| {:<34}|".format(opt) for opt in self._menu_options_text()]
-        lines.append("+" + "-" * 35 + "+")
-        print("\n".join(lines))
-        return self._read_choice()
-
-    def _menu_ansi(self) -> str:
-        accent = hex_to_ansi_fg(self.theme_color["special"])
-        lines = [f"{accent}+{'-'*35}+{RESET}", f"{accent}|{RESET}{BOLD}{'MENU':^35}{accent}|{RESET}", f"{accent}+{'-'*35}+{RESET}"]
-        lines += [f"{accent}| {RESET}{opt:<34}{accent}|{RESET}" for opt in self._menu_options_text()]
-        lines.append(f"{accent}+{'-'*35}+{RESET}")
-        print("\n".join(lines))
-        return self._read_choice()
-
-    def _read_choice(self) -> str:
-        while True:
-            key = get_key()
-            if key in ("1", "2", "3"):
-                return key
-
-    def clear_screen(self) -> None:
-        """Call this ONCE, before the animation loop starts."""
+        # re-set room interiors to be spaces only if no color
+        cursor_home()
         if self.color:
-            sys.stdout.write("\033[2J\033[H")
+            self._print_grid_colorized(None)
         else:
-            os.system("cls" if platform.system() == "Windows" else "clear")
-        sys.stdout.flush()
+            self._print_grid(None)
+        show_cursor()
 
     def _build_display_grid(self, digits: list[str], info) -> None:
         height = len(digits)
@@ -100,8 +74,6 @@ class MazeRendererASCII(MazeRenderer):
         grid = [["" for _ in range(cols)] for _ in range(rows)]
         is_wall = [[False for _ in range(cols)] for _ in range(rows)]
         theme = self.theme_char
-        theme_color = self.theme_color
-        state_mask = self._build_cell_state_mask(width, height, info)
 
         # corners
         for cy in range(height + 1):
@@ -133,21 +105,19 @@ class MazeRendererASCII(MazeRenderer):
         # room interiors
         for y in range(height):
             for x in range(width):
-                state = state_mask[y][x]
-                if state:
-                    cell_char = theme_color[state]
-                else:
-                    cell_char = theme["space"]
+                cell_char = theme["space"]
                 grid[y * 2 + 1][x * 2 + 1] = cell_char
 
         self.display_grid = grid
         self._wall_mask = is_wall
-        self._cell_state_mask = state_mask
 
     def _build_cell_state_mask(self, width: int, height: int, info: dict | None) -> list[list[str | None]]:
         mask: list[list[str | None]] = [[None] * width for _ in range(height)]
         if not info:
             return mask
+
+        for (x, y) in info.get("solution", ()):
+            mask[y][x] = "solution"
 
         for (x, y) in info.get("visited"):
             mask[y][x] = "visited"
@@ -162,15 +132,46 @@ class MazeRendererASCII(MazeRenderer):
 
         return mask
 
-    def _print_grid(self) -> None:
-        for line in self.display_grid:
+    def _print_grid(self, info) -> None:
+        h = len(self.display_grid)
+        w = len(self.display_grid[0])
+        for y in range(h):
+            line = []
+            for x in range(w):
+                ch = self.display_grid[y][x]
+                is_wall = self._wall_mask[y][x]
+                if is_wall:
+                    line.append(ch)
+                    continue
+                if y % 2 == 1 and x % 2 == 1:
+                    state = self._cell_state_mask[y // 2][x // 2]
+                    if state == "current" and info:
+                        line.append(self.theme_char.get("current", self.theme_char["space"]))
+                        continue
+                    elif state == "visited" and info:
+                        line.append(self.theme_char.get("visited", self.theme_char["space"]))
+                        continue
+                    elif state == "solution" and info:
+                        line.append(self.theme_char.get("solution", self.theme_char["space"]))
+                        continue
+                    elif state == "hunt_pos" and info:
+                        line.append(self.theme_char.get("hunt_pos", self.theme_char["space"]))
+                        continue
+                    is_blocked = self._wall_mask[y + 1][x] \
+                        and self._wall_mask[y - 1][x] \
+                        and self._wall_mask[y][x + 1] \
+                        and self._wall_mask[y][x - 1]
+                    if is_blocked:
+                        ch = self.theme_char["blocked"]
+                line.append(ch)
             print("".join(line))
 
     def _print_grid_colorized(self, info: dict[str, Any] | None) -> None:
         wall_fg = hex_to_ansi_fg(self.theme_color["wall"])
-        # if info:
-        #     visited_fg = hex_to_ansi_fg(self.theme_color.get("visited", self.theme_color["way"]))
-        #     visited_fg = hex_to_ansi_fg(self.theme_color.get("current", self.theme_color["way"]))
+        if info:
+            visited_bg = hex_to_ansi_bg(self.theme_color.get("visited", self.theme_color["way"]))
+            current_bg = hex_to_ansi_bg(self.theme_color.get("current", self.theme_color["way"]))
+            solution_bg = hex_to_ansi_bg(self.theme_color.get("solution", self.theme_color["way"]))
         reset = "\033[0m"
         h = len(self.display_grid)
         w = len(self.display_grid[0])
@@ -183,43 +184,25 @@ class MazeRendererASCII(MazeRenderer):
                 if is_wall:
                     line.append(f"{wall_fg}{ch}{reset}")
                     continue
-                else:
+                if y % 2 == 1 and x % 2 == 1:
+                    state = self._cell_state_mask[y // 2][x // 2]
+                    if state == "current" and info:
+                        line.append(f"{current_bg}{ch}{reset}")
+                        continue
+                    if state == "visited" and info:
+                        line.append(f"{visited_bg}{ch}{reset}")
+                        continue
+                    if state == "solution" and info:
+                        line.append(f"{solution_bg}{ch}{reset}")
+                        continue
                     is_blocked = self._wall_mask[y + 1][x] \
                         and self._wall_mask[y - 1][x] \
                         and self._wall_mask[y][x + 1] \
                         and self._wall_mask[y][x - 1]
                     if is_blocked:
                         bg = hex_to_ansi_bg(self.theme_color["bg"])
-                    else: 
+                    else:
                         bg = hex_to_ansi_bg(self.theme_color["way"])
                     ch = f"{bg}{ch}{reset}"
                 line.append(ch)
             print("".join(line))
-
-    def _get_cell_char_playable(
-            self,
-            pos: Tuple[int, int],
-            entry,
-            exit_
-            ) -> str:
-            return "   "
-
-    def _get_cell_char(
-            self, 
-            pos: Tuple[int, int], 
-            visited: List[tuple[int, int]] | None = None, 
-            current: tuple[int, int] | None = None,
-            hunt_pos: tuple[int, int] | None = None) -> str:
-            # if self.play_mode:
-            #     return self._get_char_cell_playable
-            # if current:
-            #     if current == pos:
-            #         middle += f"{self._fg('current')}   {RESET}"
-            # elif visited:
-            #     if pos in visited:
-            #         middle += f"{self._fg('visited')}   {RESET}"
-            # elif hunt_pos:
-            #     if pos == hunt_pos:
-            #         middle += "   "
-            # else:
-                return "   "
