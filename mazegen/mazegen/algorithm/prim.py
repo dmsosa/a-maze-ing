@@ -33,6 +33,10 @@ class PrimAlgorithm(MazeAlgorithmStrategy):
         generator: "MazeGenerator",
         maze: "Maze",
     ) -> None:
+        # Bind generated maze to the generator
+        self._reset_state()
+        self.generator = generator
+        self.maze = maze
         visited: set[tuple[int, int]] = set()
         frontier: list[tuple[int, int]] = []
         frontier_set: set[tuple[int, int]] = set()
@@ -87,8 +91,13 @@ class PrimAlgorithm(MazeAlgorithmStrategy):
                 ):
                     frontier.append(position)
                     frontier_set.add(position)
-
-            generator.emit("cell_updated", maze=maze)
+            info = {
+                "visited": visited,
+                "current": current,
+                "frontier": frontier,
+                "frontier_set": frontier_set,
+            }
+            self._maybe_emit(maze=maze, info=info)
 
     def show(self) -> str:
         return self.name

@@ -2,3 +2,6 @@
 venv/
 .venv/
 **/poetry.lock
+tests/
+dist/
+static/

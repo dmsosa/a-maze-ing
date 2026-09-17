@@ -13,7 +13,7 @@ ALGORITHM_MAP: dict[MazeAlgorithm, MazeAlgorithmStrategy] = {
 }
 
 
-def get_algorithm(name: MazeAlgorithm) -> MazeAlgorithmStrategy:
+def get_algorithm(name: MazeAlgorithmStrategy) -> MazeAlgorithmStrategy:
     try:
         return ALGORITHM_MAP[name]
     except KeyError:

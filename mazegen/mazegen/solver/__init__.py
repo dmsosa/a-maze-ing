@@ -1,10 +1,27 @@
-from .bfs import solve_bfs
-from .dfs import solve_dfs
-from .astar import solve_astar
+from ..model.constants import SolutionAlgorithm
+from .base import MazeSolutionStrategy
+from .astar import AstarSolutionStrategy
+from .bfs import BFSSolutionStrategy
+from .dfs import DFSSolutionStrategy
+
+SOLUTION_ALGORITHM_MAP: dict[str, SolutionAlgorithm] = {
+    SolutionAlgorithm.ASTAR: AstarSolutionStrategy(),
+    SolutionAlgorithm.DFS: DFSSolutionStrategy(),
+    SolutionAlgorithm.BFS: BFSSolutionStrategy(),
+}
+
+
+def get_solution_algorithm(name: SolutionAlgorithm) -> MazeSolutionStrategy:
+    try:
+        return SOLUTION_ALGORITHM_MAP[name]
+    except KeyError:
+        raise ValueError(f"Unknown solver '{name}'. Available: {list(SOLUTION_ALGORITHM_MAP)}")
 
 
 __all__ = [
-    "solve_bfs",
-    "solve_dfs",
-    "solve_astar",
+    "MazeSolutionStrategy",
+    "AstarSolutionStrategy",
+    "BFSSolutionStrategy",
+    "DFSSolutionStrategy",
+    "get_solution_algorithm"
 ]

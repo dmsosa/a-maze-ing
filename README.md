@@ -214,10 +214,37 @@ could be cool to indicate the user which fields are missing, and then informing 
     the program needs to show the solution, once I ave the solution, i can show it  via the state mask array, but when I want the
 
     SHOWING THE SOLUTION:
-    WHERE: IN THE MAZE
+    WHERE: IN THE MAZE GENERATOR object
     WHEN: when the boolean value render.show_solution is True, or whether my render receives an optional array of tuples that is the solution. 
     WHERE the solution is? It is found by the MazeSolver class, which takes an entry, an exit, the representation in hexadecimal digits
-    then the array with solution is going to be provided by the maze generator ALWAYS 
+    then the array with solution is going to be provided by the maze generator ALWAYS receives
 
 
     the program now renders a maze but I need to make it able to enter into a while loop after displaying an options menu.
+
+    SO, NOW THAT THE SOLUTIONS EXIST, CAN I CHANGE THE PASSING INFO AROUND TO BE ABLE TO JUST UPDATE THE RENDER DETAILS IN THE EVENT THAT IS BEING EMITTED,
+
+
+
+    IF NOT, CAN I JUST GRAB SOLUTIONS FROM THE INFO? LETS TRY
+    THAT event is going to be fired from the solver. I want to get the solution once I discover it and save it for later, so that it can be printed only by setting the show_solution flag to true, and making the play_manager to re render it.
+
+
+
+
+    Now, how the play manager is going to display a good menu? lest ask claude code.
+
+    It should be like
+
+    for item in menu.items.
+    print [index item.key] - label
+    if key == item.key call play_manager._generate_new_maze() 
+
+    # BONUS
+    add benchmark to the maze as it is being generated, which comes above the menu
+
+
+    REDIRECT EXIT TO WIDHT -1 HEIGHT -1
+    FIX THE MENU IN ASCII MODE
+    PRINT EXIT AND ENTRY ALWAYS
+    

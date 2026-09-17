@@ -2,13 +2,12 @@
 from enum import Enum
 from functools import lru_cache
 import re
-import time
-from typing import Any, Optional, Set, Tuple
-from config.utils import DEFAULT_COORD, DEFAULT_COORD_STR, random_coord, valid_coord
+import sys
+from typing import Any, Set, Tuple
+from config.utils import DEFAULT_COORD, print_sleep, random_coord, valid_coord
 from constants import KEY_REGEXP, SNAKE_CASE_REGEXP
-from exception.config_exception import MazeConfigException
-from mazegen import MazeAlgorithm
-from pydantic import BaseModel, Field, field_validator, model_validator
+from mazegen import MazeAlgorithm, SolutionAlgorithm
+from pydantic import BaseModel, Field
 from exception import raise_mc_error
 
 
@@ -22,7 +21,8 @@ class MazeConfiguration(BaseModel):
     height: int = Field(default=25, ge=1, le=500)
     entry: Tuple[int, int] = Field(default=(0,0))
     exit: Tuple[int, int] = Field(default=(0,0))
-    algorithm: MazeAlgorithm
+    algorithm: MazeAlgorithm = MazeAlgorithm.PRIM
+    solution_algorithm: SolutionAlgorithm = SolutionAlgorithm.ASTAR
     seed: int = 0
     output_file: str = Field(
                             default="output.txt",
@@ -34,7 +34,7 @@ class MazeConfiguration(BaseModel):
     )
     perfect: bool
     render_mode: RenderMode = RenderMode.ASCII
-    delay: float = Field(default=0.5, ge=0.0, le=30.0)
+    delay: float = Field(default=0.025, ge=0.0, le=30.0)
     pretty: bool = False
     animated: bool = True
     color: bool = False
@@ -48,7 +48,7 @@ class MazeConfiguration(BaseModel):
         return set(cls.__annotations__.keys())
 
     @staticmethod
-    def parse(raw: str) -> dict[str, Any]:
+    def parse(raw: str, verbose: bool = False, debug=True) -> dict[str, Any]:
         """
         Reads configuration file, returns a dictionary.
         Check following errors:
@@ -104,25 +104,34 @@ class MazeConfiguration(BaseModel):
                 raise_mc_error(msg, i + 1, 1)
         # Necessary try convert width and height to integers
         # To be used by parse_coords later.
-        MazeConfiguration.check_missing_keys(config)
+        MazeConfiguration.check_missing_keys(config, verbose)
         try:
             config["width"] = int(config["width"])
             config["height"] = int(config["height"])
             if (config["width"] < 8 or config["height"] < 8):
-                print(
-                    "[WARNING]: The 42 pattern "
-                    "can not be inserted within the maze."
-                    )
-                time.sleep(1.05)
+                msg = "" \
+                "[WARNING]: The 42 pattern " \
+                "can not be inserted within the maze." \
+                ""
+                if verbose:
+                    print_sleep(msg)
+                if debug:
+                    print(msg, file=sys.stderr)
         except ValueError as e:
             raise_mc_error(
                     f"Error during parsing process: {e}",
                     i
                 )
         if isinstance(config["entry"], str):
-            config["entry"] = MazeConfiguration.parse_coords(config.get("entry"))
+            config["entry"] = MazeConfiguration.parse_coords(
+                config.get("entry"),
+                verbose
+                )
         if isinstance(config["exit"], str):
-            config["exit"] = MazeConfiguration.parse_coords(config.get("exit"))
+            config["exit"] = MazeConfiguration.parse_coords(
+                config.get("exit"),
+                verbose
+                )
         if not valid_coord(
             config["entry"],
             config["width"],
@@ -132,9 +141,11 @@ class MazeConfiguration(BaseModel):
                 f"Coordinate out of bounds: {config['entry']}" \
                 " redirectig to the origin (0,0)." \
                 ""
-            print(msg)
             config["entry"] = DEFAULT_COORD
-            time.sleep(1.05)
+            if verbose:
+                print_sleep(msg)
+            if debug:
+                print(msg, file=sys.stderr)
         if not valid_coord(
             config["exit"],
             config["width"],
@@ -142,16 +153,17 @@ class MazeConfiguration(BaseModel):
             ):
             msg = "" \
                 f"Coordinate out of bounds: {config['exit']}" \
-                " redirectig to a random cell: " \
+                " redirectig to the bottom and right-most cell: " \
                 ""
-            config["exit"] = random_coord(
-                    config["width"],
-                    config["height"]
+            config["exit"] = (
+                    config["width"] - 1,
+                    config["height"] - 1
                     )
             msg += f"{config['exit']}"
-            print(msg)
-            time.sleep(1.05)
-
+            if verbose:
+                print_sleep(msg)
+            if debug:
+                print(msg, file=sys.stderr)
         if config["entry"] == config["exit"]:
             msg = "" \
                 f"entry and exit are equal, redirecting" \
@@ -160,12 +172,16 @@ class MazeConfiguration(BaseModel):
             while config["entry"] == config["exit"]:
                 config["exit"] = random_coord(config["width"], config["height"])
             msg += f"{config['exit']}"
-            print(msg)
-            time.sleep(1.05)
+            if verbose:
+                print_sleep(msg)
+            if debug:
+                print(msg, file=sys.stderr)
+        if debug:
+            print(f"config dict parsed successfully: {config}", file=sys.stderr)
         return config
     
     @staticmethod
-    def parse_coords(value: str) -> tuple[int, int]:
+    def parse_coords(value: str, verbose: bool = False, debug = True) -> tuple[int, int]:
         coord = value.split(",")
         if len(coord) != 2:
             msg = "" \
@@ -174,8 +190,10 @@ class MazeConfiguration(BaseModel):
                 f" received: '{coord}'\n" \
                 "using default value: (0, 0)" \
                 ""
-            print(msg)
-            time.sleep(1.05)
+            if verbose:
+                print_sleep(msg)
+            if debug:
+                print(msg, file=sys.stderr)
             return (0, 0)
         try:
             x = int(coord[0])
@@ -188,8 +206,8 @@ class MazeConfiguration(BaseModel):
                 f" received: '{coord}'" \
                 "using default value: (0, 0)" \
                 ""
-            print(msg)
-            time.sleep(1.05)
+            if verbose:
+                print_sleep(msg)
             return (0, 0)               
 
 
@@ -238,18 +256,22 @@ class MazeConfiguration(BaseModel):
         return (None, None)
 
     @staticmethod
-    def check_missing_keys(config_dict: dict[str, str]) -> None:
+    def check_missing_keys(
+        config_dict: dict[str, str],
+        verbose: bool = False,
+        debug: bool = True
+        ) -> None:
         model_fields = MazeConfiguration.model_fields
 
 
         for name, field in model_fields.items():
             if name not in config_dict:
                 config_dict[name] = field.default
-                print(
-                    f"Option '{name}' not found, \
-using default: {field.default}"
-                    )
-                time.sleep(1.05)
+                msg = f"Option '{name}' not found, using default: {field.default}"
+                if verbose:
+                    print_sleep(msg)
+                if debug:
+                    print(msg, file=sys.stderr)
 
     @staticmethod
     @lru_cache

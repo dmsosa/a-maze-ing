@@ -1,8 +1,6 @@
 import os, \
 platform, \
 sys, \
-termios, \
-tty, \
 time
 
         

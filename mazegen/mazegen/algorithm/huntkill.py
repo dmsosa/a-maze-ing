@@ -42,9 +42,9 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
         self._reset_state()
         self.generator = generator
         self.maze = maze
-        self.visited: set[tuple[int, int]]= set()
-        self.current = maze.entry
-        self.visited.add(self.current)
+        visited: set[tuple[int, int]]= set()
+        current = maze.entry
+        visited.add(current)
         self.total_cells = sum(
             1
             for row in maze.cells
@@ -52,15 +52,15 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
             if not cell.blocked
         )
 
-        self.current = maze.entry
+        current = maze.entry
 
-        visited = self.visited
+        visited = visited
         total_cells = self.total_cells
 
         while len(visited) < total_cells:
 
             # Kill time
-            x, y = self.current
+            x, y = current
 
             unvisited_neighbors = []
 
@@ -74,9 +74,14 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
                 direction, neighbor = random.choice(unvisited_neighbors)
 
                 maze.remove_wall(x, y, direction)
-                self.current = (neighbor.x, neighbor.y)
-                visited.add(self.current)
-                self._maybe_emit()
+                current = (neighbor.x, neighbor.y)
+                visited.add(current)
+                info = {
+                    "visited": visited,
+                    "current": current,
+                    "hunt_pos": None,
+                }
+                self._maybe_emit(maze=maze, info=info)
                 continue
 
             # Hunt time
@@ -111,29 +116,16 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
                         )
 
                         maze.remove_wall(x, y, direction)
-                        self.current = position
-                        self.hunt_pos = position
-                        self.visited.add(self.current)
-                        self._maybe_emit()
-
+                        current = position
+                        hunt_pos = position
+                        visited.add(current)
+                        info = {
+                            "visited": visited,
+                            "current": current,
+                            "hunt_pos": hunt_pos,
+                        }
+                        self._maybe_emit(maze=maze, info=info)
                         found = True
                         break
                 if found:
                     break
-
-    def _maybe_emit(self) -> None:
-        self.move_count += 1
-        if self.move_count % self.emit_every == 0:
-            self.generator.emit(
-                "cell_updated",
-                generator=self.generator,
-                maze=self.maze,
-                info={
-                    "current": self.current,
-                    "visited": self.visited,
-                    "hunt_pos": self.hunt_pos,
-                },
-            )
-
-    def show(self) -> str:
-        return self.name

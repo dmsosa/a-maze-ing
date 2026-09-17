@@ -1,96 +1,116 @@
 from typing import TYPE_CHECKING
+from .base import MazeSolutionStrategy
 
 
 if TYPE_CHECKING:
-    from ..model.maze import Maze
+    from ..model.maze_generator import Maze
 
 
-def heuristic(
-    current: tuple[int, int],
-    end: tuple[int, int],
-) -> int:
-    x1, y1 = current
-    x2, y2 = end
+class AstarSolutionStrategy(MazeSolutionStrategy):
+    def __init__(self) -> None:
+        super().__init__("A-Star Solution Algorithm")
 
-    return abs(x1 - x2) + abs(y1 - y2)
+    def generate_solution(self, maze: "Maze") -> tuple[str, set[tuple[int, int]]]:
+        solution_path = self._solve_astar(maze)
+        solution_coords = self.path_to_coordinates(maze.entry, solution_path)
+        return (solution_path, solution_coords)
 
+    def _heuristic(self,
+                   current: tuple[int, int],
+                   end: tuple[int, int],
+                   ) -> int:
+        x1, y1 = current
+        x2, y2 = end
 
-def solve_astar(
-    maze: "Maze",
-    start: tuple[int, int] | None = None,
-    end: tuple[int, int] | None = None,
-) -> str:
-    start = maze.entry if start is None else start
-    end = maze.exit if end is None else end
+        return abs(x1 - x2) + abs(y1 - y2)
 
-    start_cell = maze.get_cell(*start)
-    end_cell = maze.get_cell(*end)
+    def _solve_astar(self, maze: "Maze") -> str:
+        """
+        Solve a maze using the A* Search algorithm.
 
-    if start_cell.blocked or end_cell.blocked:
-        raise ValueError("Start and end must be available cells")
+        Evaluation phase:
+            Select the cell with the lowest estimated total cost.
 
-    open_set = [start]
+        Exploration phase:
+            Visit open neighboring cells and update their movement cost.
 
-    g_score = {
-        start: 0
-    }
+        Path reconstruction:
+            Follow the stored previous cells from the exit to the start.
 
-    previous: dict[
-        tuple[int, int],
-        tuple[tuple[int, int], str]
-    ] = {}
+        Return the shortest path as a list of coordinates.
+        """
 
-    while open_set:
+        start = maze.entry
+        end = maze.exit
 
-        # Evaluation phase
-        current = min(
-            open_set,
-            key=lambda position: (
-                g_score[position]
-                + heuristic(position, end)
-            ),
-        )
+        start_cell = maze.get_cell(*start)
+        end_cell = maze.get_cell(*end)
 
-        open_set.remove(current)
+        if start_cell.blocked or end_cell.blocked:
+            raise ValueError("Start and end must be available cells")
 
-        if current == end:
-            break
+        open_set = [start]
 
-        x, y = current
+        g_score = {
+            start: 0
+        }
 
-        # Exploration phase
-        for direction, neighbor in maze.get_open_neighbors(x, y):
-            neighbor_position = (neighbor.x, neighbor.y)
+        previous: dict[
+            tuple[int, int],
+            tuple[tuple[int, int], str]
+        ] = {}
 
-            new_cost = g_score[current] + 1
+        while open_set:
 
-            if (
-                neighbor_position not in g_score
-                or new_cost < g_score[neighbor_position]
-            ):
-                g_score[neighbor_position] = new_cost
+            # Evaluation phase
+            current = min(
+                open_set,
+                key=lambda position: (
+                    g_score[position]
+                    + self._heuristic(position, end)
+                ),
+            )
 
-                previous[neighbor_position] = (
-                    current,
-                    direction.name,
-                )
+            open_set.remove(current)
 
-                if neighbor_position not in open_set:
-                    open_set.append(neighbor_position)
+            if current == end:
+                break
 
-    if end not in g_score:
-        raise ValueError("No path exists between entry and exit")
+            x, y = current
 
-    # Path reconstruction
-    path: list[str] = []
-    current = end
+            # Exploration phase
+            for direction, neighbor in maze.get_open_neighbors(x, y):
+                neighbor_position = (neighbor.x, neighbor.y)
 
-    while current != start:
-        parent, direction = previous[current]
+                new_cost = g_score[current] + 1
 
-        path.append(direction)
-        current = parent
+                if (
+                    neighbor_position not in g_score
+                    or new_cost < g_score[neighbor_position]
+                ):
+                    g_score[neighbor_position] = new_cost
 
-    path.reverse()
+                    previous[neighbor_position] = (
+                        current,
+                        direction.name,
+                    )
 
-    return "".join(path)
+                    if neighbor_position not in open_set:
+                        open_set.append(neighbor_position)
+
+        if end not in g_score:
+            raise ValueError("No path exists between entry and exit")
+
+        # Path reconstruction
+        path: list[str] = []
+        current = end
+
+        while current != start:
+            parent, direction = previous[current]
+
+            path.append(direction)
+            current = parent
+
+        path.reverse()
+
+        return "".join(path)

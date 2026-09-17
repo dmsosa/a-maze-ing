@@ -7,15 +7,30 @@ build-mazegen:
 
 install: build-mazegen
 	@echo "\033[1;34mInstalling dependencies...\033[0m"
-	@poetry install --with test
+	@poetry install
 	@echo "\n\033[1;32m✓ Done!\033[0m"
 	@echo "\n\033[1;33mTo activate the virtual environment, run source:\033[0m"
 	@echo "\033[1;36m  $(shell poetry env activate)\033[0m\n"
+	@echo "\n\033[1;33mYou can also now install the mazegen package via pip install:\033[0m"
+	@echo "\033[1;36m python -m venv myenv\033[0m\n"
+	@echo "\033[1;36m source myenv/bin/activate\033[0m\n"
+	@echo "\033[1;36m pip install dist/mazegen-{}.whl (or .tar.gz)\033[0m\n"
 
 run:
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
 		echo "\033[1;33mCorrect: VIRTUAL_ENV is set. Running program...\n\033[0m"; \
 		python3 ./src/$(NAME) $(CONFIG_FILE); \
+	else \
+		echo "Error: VIRTUAL_ENV is not set. Please activate your virtual environment first."; \
+		echo "make install or poetry activate"; \
+		echo "make install."; \
+		exit 1; \
+	fi
+
+debug:
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "\033[1;33mCorrect: VIRTUAL_ENV is set. Running program...\n\033[0m"; \
+		python3 ./src/$(NAME) $(CONFIG_FILE) 2>log.txt; \
 	else \
 		echo "Error: VIRTUAL_ENV is not set. Please activate your virtual environment first."; \
 		echo "make install or poetry activate"; \

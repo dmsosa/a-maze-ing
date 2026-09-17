@@ -19,7 +19,7 @@ class Maze(BaseModel):
 
     def get_cell(self, x: int, y: int) -> Cell:
         if not (0 <= x < self.width and 0 <= y < self.height):
-            raise ValueError("Coordinates outside the maze")
+            raise ValueError(f"Coordinates outside the maze: '({x}, {y})'")
 
         return self.cells[y][x]
 

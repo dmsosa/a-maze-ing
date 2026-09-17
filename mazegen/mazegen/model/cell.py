@@ -57,4 +57,4 @@ class Cell(BaseModel):
         for direction in Direction:
             if self.has_wall(direction):
                 value += WALL_WEIGHTS[direction]
-        return format(value, "X")
+        return format(value, "x")

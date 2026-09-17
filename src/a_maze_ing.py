@@ -37,7 +37,7 @@ def parse_maze_config() -> "MazeConfiguration":
     try:
         with open(config_file, 'r') as f:
             raw = f.read()
-            config_dict = MazeConfiguration.parse(raw)
+            config_dict = MazeConfiguration.parse(raw, verbose=False)
             return MazeConfiguration(**config_dict)
     except (
         FileNotFoundError,
@@ -58,16 +58,16 @@ def main() -> None:
             render = MazeRendererASCII()
         elif maze_config.render_mode == RenderMode.MINILIBX:
             render = MazeRendererASCII()
-        play_manager = PlayManager(maze_generator, render)
+        play_manager = PlayManager(maze_config, maze_generator, render)
         is_ansi = supports_ansi()
         if is_ansi and maze_config.color:
             render.color = True
+            play_manager.color = True
         if maze_config.animated:
             maze_generator.on(
                 "cell_updated",
                 lambda **kwargs: 
                 render.render(
-                    kwargs["generator"],
                     kwargs["maze"],
                     kwargs["info"]
                     ))
@@ -76,14 +76,16 @@ def main() -> None:
                 "maze_completed",
                 lambda **kwargs: 
                 render.render(
-                    kwargs["generator"],
-                    kwargs["maze"]
+                    kwargs["maze"],
+                    kwargs["info"]
                     ))
         render.set_frame_delay(maze_config.delay)
+        maze_generator.on("maze_completed", lambda **kwargs: render.render_clean_up)
+        maze_generator.on("maze_solution", lambda **kwargs: render.update_context(**kwargs))
         clear_screen(is_ansi)
         if maze_config.pretty:
             print_presentation()
-        maze_generator.generate()
+        maze_generator.generate()    
         play_manager.run()
     except RenderError:
         print_goodbye("Render error")
@@ -94,7 +96,7 @@ def main() -> None:
         print("\n¡Thanks for using a-maze-ing! ;)")
         if not maze_generator:
             sys.exit(0)
-        maze_generator.export
+        maze_generator.export_maze()
     except Exception as e:
         import traceback
         traceback.print_exc()

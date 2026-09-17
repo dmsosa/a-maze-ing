@@ -32,6 +32,10 @@ class RecursiveBacktrackerAlgorithm(MazeAlgorithmStrategy):
         generator: "MazeGenerator",
         maze: "Maze",
     ) -> None:
+        # Bind generated maze to the generator
+        self._reset_state()
+        self.generator = generator
+        self.maze = maze
         visited: set[tuple[int, int]] = set()
         stack: list[tuple[int, int]] = []
 
@@ -60,8 +64,12 @@ class RecursiveBacktrackerAlgorithm(MazeAlgorithmStrategy):
                 current = (neighbor.x, neighbor.y)
 
                 visited.add(current)
-
-                generator.emit("cell_updated", maze=maze)
+                info = {
+                    "visited": visited,
+                    "current": current,
+                    "stack": stack,
+                }
+                self._maybe_emit(maze=maze, info=info)
 
             # Backtracking phase
             elif stack:

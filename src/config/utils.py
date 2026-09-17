@@ -1,4 +1,5 @@
 import random
+import time
 
 
 def random_coord(
@@ -10,6 +11,11 @@ def random_coord(
 
 def valid_coord(coord: tuple[int, int], w: int, h: int):
     return (0 <= coord[0] < w and 0 <= coord[1] < h)
+
+
+def print_sleep(msg: str, delay = 1.05):
+        print(msg)
+        time.sleep(delay)
 
 
 DEFAULT_COORD: tuple[int, int] = (0,0)

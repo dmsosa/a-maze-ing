@@ -1,73 +1,94 @@
+from .base import MazeSolutionStrategy
 from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from ..model.maze import Maze
+    from ..model.maze_generator import Maze
 
 
-def solve_dfs(
-    maze: "Maze",
-    start: tuple[int, int] | None = None,
-    end: tuple[int, int] | None = None,
-) -> str:
-    start = maze.entry if start is None else start
-    end = maze.exit if end is None else end
+class DFSSolutionStrategy(MazeSolutionStrategy):
+    def __init__(self) -> None:
+        super().__init__("Depth-First Search Solution Algorithm")
 
-    start_cell = maze.get_cell(*start)
-    end_cell = maze.get_cell(*end)
+    def generate_solution(self, maze: "Maze") -> tuple[str, set[tuple[int, int]]]:
+        solution_path = self._solve_dfs(maze)
+        solution_coords = self.path_to_coordinates(maze.entry, solution_path)
+        return (solution_path, solution_coords)
 
-    if start_cell.blocked or end_cell.blocked:
-        raise ValueError("Start and end must be available cells")
+    def _solve_dfs(self, maze: "Maze") -> str:
+        """
+        Solve a maze using the Depth-First Search algorithm.
 
-    stack = [start]
+        Exploration phase:
+            Move through open neighboring cells using a stack.
 
-    visited = {start}
+        Backtracking phase:
+            Return to previous cells when no unvisited path remains.
 
-    previous: dict[
-        tuple[int, int],
-        tuple[tuple[int, int], str]
-    ] = {}
+        Path reconstruction:
+            Follow the stored previous cells from the exit to the start.
 
-    while stack:
+        Return the path as a list of coordinates.
+        """
 
-        # Exploration
-        x, y = stack.pop()
+        start = maze.entry
+        end = maze.exit
 
-        current = (x, y)
+        start_cell = maze.get_cell(*start)
+        end_cell = maze.get_cell(*end)
 
-        if current == end:
-            break
+        if start_cell.blocked or end_cell.blocked:
+            raise ValueError("Start and end must be available cells")
 
-        for direction, neighbor in maze.get_open_neighbors(x, y):
-            neighbor_position = (neighbor.x, neighbor.y)
+        stack = [start]
 
-            if neighbor_position in visited:
-                continue
+        visited = {start}
 
-            visited.add(neighbor_position)
+        previous: dict[
+            tuple[int, int],
+            tuple[tuple[int, int], str]
+        ] = {}
 
-            previous[neighbor_position] = (
-                current,
-                direction.name,
-            )
+        while stack:
 
-            stack.append(neighbor_position)
+            # Exploration
+            x, y = stack.pop()
 
-        # Backtracking happens automatically through the stack
+            current = (x, y)
 
-    if end not in visited:
-        raise ValueError("No path exists between entry and exit")
+            if current == end:
+                break
 
-    # Path reconstruction
-    path: list[str] = []
-    current = end
+            for direction, neighbor in maze.get_open_neighbors(x, y):
+                neighbor_position = (neighbor.x, neighbor.y)
 
-    while current != start:
-        parent, direction = previous[current]
+                if neighbor_position in visited:
+                    continue
 
-        path.append(direction)
-        current = parent
+                visited.add(neighbor_position)
 
-    path.reverse()
+                previous[neighbor_position] = (
+                    current,
+                    direction.name,
+                )
 
-    return "".join(path)
+                stack.append(neighbor_position)
+
+            # Backtracking happens automatically through the stack
+
+        if end not in visited:
+            raise ValueError("No path exists between entry and exit")
+
+        # Path reconstruction
+        path: list[str] = []
+        current = end
+
+        while current != start:
+            parent, direction = previous[current]
+
+            path.append(direction)
+            current = parent
+
+        path.reverse()
+
+        return "".join(path)

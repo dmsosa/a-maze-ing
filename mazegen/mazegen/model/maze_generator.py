@@ -1,10 +1,10 @@
 from collections import defaultdict
 from typing import Callable, Tuple
+from ..solver import get_solution_algorithm
 from pydantic import BaseModel, Field, PrivateAttr
-
 from constants import SNAKE_CASE_REGEXP
 from .cell import DELTAS, Direction
-from .constants import MazeAlgorithm
+from .constants import MazeAlgorithm, SolutionAlgorithm
 from ..algorithm import get_algorithm
 from .maze import Maze
 import random
@@ -65,10 +65,13 @@ class MazeGenerator(EventEmitter):
     height: int = Field(gt=0, lt=500)
     entry: Tuple[int, int]
     exit: Tuple[int, int]
-    algorithm: MazeAlgorithm
+    algorithm: MazeAlgorithm = MazeAlgorithm.PRIM
     seed: int | None = None
     perfect: bool = True
     output_file: str = Field(default="output.txt", pattern=SNAKE_CASE_REGEXP)
+    solution_algorithm: SolutionAlgorithm = SolutionAlgorithm.ASTAR
+    solution_path: str = ""
+    solution_coords: set[tuple[int, int]] = set()
     maze: Maze | None = None
 
     def generate(self) -> "Maze":
@@ -104,12 +107,16 @@ class MazeGenerator(EventEmitter):
         strategy.generate_algorithm(self, self.maze)
         if not self.perfect:
             self.make_imperfect(self.maze)
+        solution_strategy = get_solution_algorithm(self.solution_algorithm)
+        solution_path, solution_coords = solution_strategy.generate_solution(self.maze)
+        self.solution_path = solution_path
+        self.solution_coords = solution_coords
         self.emit(
-            "maze_completed",
-            generator=self,
-            maze=self.maze,
-            info=None
+            "maze_solution",
+            solution=solution_coords,
+            solution_path=solution_path,
             )
+        self.emit("maze_completed", maze=self.maze, info=None)
         return self.maze
 
     def would_create_open_3x3(
@@ -250,7 +257,7 @@ class MazeGenerator(EventEmitter):
             f"{maze_rows}\n\n"
             f"{entry_x},{entry_y}\n"
             f"{exit_x},{exit_y}\n"
-            f"{directions}\n"
+            f"{self.solution_path}\n"
         )
 
     def export_maze(
