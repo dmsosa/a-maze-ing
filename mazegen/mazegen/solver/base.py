@@ -30,5 +30,8 @@ class MazeSolutionStrategy(ABC):
         return coordinates
 
     @abstractmethod
-    def generate_solution(self, maze: "Maze") -> tuple[str, set[tuple[int, int]]]:
+    def generate_solution(
+        self,
+        maze: "Maze"
+    ) -> tuple[str, set[tuple[int, int]]]:
         raise NotImplementedError("SolutionStrategy not implemented")

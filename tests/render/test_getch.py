@@ -2,6 +2,7 @@
 import time
 from render.utils import getch
 
+
 def main() -> None:
     while True:
         key = getch()

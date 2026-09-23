@@ -1,6 +1,8 @@
-from .cell import Cell, DELTAS, Direction, OPPOSITE
 from typing import List, Tuple
+
 from pydantic import BaseModel, Field
+
+from .cell import Cell, DELTAS, Direction, OPPOSITE
 
 
 class Maze(BaseModel):
@@ -14,12 +16,16 @@ class Maze(BaseModel):
     width: int = Field(gt=0, lt=500)
     height: int = Field(gt=0, lt=500)
     cells: List[List[Cell]] = Field(default_factory=list)
+    blocked_cells: set[tuple[int, int]] = set()
     entry: Tuple[int, int]
     exit: Tuple[int, int]
 
     def get_cell(self, x: int, y: int) -> Cell:
         if not (0 <= x < self.width and 0 <= y < self.height):
-            raise ValueError(f"Coordinates outside the maze: '({x}, {y})'")
+            raise ValueError(
+                f"Coordinates outside the maze: '({x}, {y})',"
+                f"{self.model_dump()}"
+                )
 
         return self.cells[y][x]
 
@@ -36,6 +42,9 @@ class Maze(BaseModel):
                 row.append(cell)
 
             self.cells.append(row)
+
+    def set_blocked_cells(self, blocked_cells: set[tuple[int, int]]) -> None:
+        self.blocked_cells = blocked_cells
 
     def get_neighbors(
         self,

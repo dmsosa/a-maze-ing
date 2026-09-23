@@ -1,21 +1,22 @@
-from collections import defaultdict
-from typing import Callable, Tuple
-from ..solver import get_solution_algorithm
-from pydantic import BaseModel, Field, PrivateAttr
-from constants import SNAKE_CASE_REGEXP
-from .cell import DELTAS, Direction
-from .constants import MazeAlgorithm, SolutionAlgorithm
-from ..algorithm import get_algorithm
-from .maze import Maze
 import random
+from collections import defaultdict
+from typing import Callable
+
+from pydantic import BaseModel, Field, PrivateAttr
+from .constants import SNAKE_CASE_REGEXP
+
+from ..algorithm import get_algorithm
 from ..pattern.forty_two import FORTY_TWO_PATTERN
 from ..pattern.utils import centered_positions
+from ..solver import get_solution_algorithm
 from .cell import DELTAS, Direction
+from .constants import MazeAlgorithm, SolutionAlgorithm
+from .maze import Maze
 
 
 class EventEmitter(BaseModel):
     """
-        The Subject interface declares a set of methods for managing subscribers.
+    The Subject interface declares a set of methods for managing subscribers.
     """
     _listeners: defaultdict[str, list[Callable]] = PrivateAttr(
             default_factory=lambda: defaultdict[str, list[Callable]](list)
@@ -26,8 +27,8 @@ class EventEmitter(BaseModel):
         self._listeners[event].append(callback)
 
     def off(self, event, callback: Callable) -> None:
-       """Unsubscribe a callback from a specific event type."""
-       self._listeners[event].remove(callback)
+        """Unsubscribe a callback from a specific event type."""
+        self._listeners[event].remove(callback)
 
     def emit(self, event: str, **data) -> None:
         """Emit an event — only listeners for that type are called."""
@@ -37,60 +38,48 @@ class EventEmitter(BaseModel):
 
 class MazeGenerator(EventEmitter):
     """
-    MazeGenerator generates a maze, it has a method called
-    generate() which uses the algorithm currently setted to
-    fill the matrix of cells with cells that have neighbours
-    pointing to another cell (in case File "/home/durisosa/work/repos-official/deliver-amazeing/./src/a_maze_ing.py", line 67, in main
-    maze = maze_generator.generate()
-  File "/home/durisosa/work/repos-official/deliver-amazeing/mazegen/mazegen/model/maze_generator.py", line 9 of having a neighbour
-    in that direction, which means that there is a way)
-    or NULL (in case of having no neighbour in that direction,
-    which means that there is a wall).
+    Coordinates maze generation.
 
-    It means generate method is a void function.
-    method generate_output traverses our matrix of cells
-    and gives as output a matrix of hexadecimal characters,
-    useful for generating the output.txt file.
-
-    It can be connected later to the solver package to
-    find an array of solutions for the maze.
-
-    Coordinates the creation of a maze.
-
-    It creates the Maze structure, initializes its cells,
-    selects the generation algorithm and executes it.
-
+    Creates and initializes the maze, applies the 42 pattern,
+    executes the selected generation algorithm, optionally makes
+    the maze imperfect, solves it, and stores the solution.
     """
     width: int = Field(gt=0, lt=500)
     height: int = Field(gt=0, lt=500)
-    entry: Tuple[int, int]
-    exit: Tuple[int, int]
+    entry: tuple[int, int]
+    exit: tuple[int, int]
     algorithm: MazeAlgorithm = MazeAlgorithm.PRIM
     seed: int | None = None
     perfect: bool = True
     output_file: str = Field(default="output.txt", pattern=SNAKE_CASE_REGEXP)
     solution_algorithm: SolutionAlgorithm = SolutionAlgorithm.ASTAR
     solution_path: str = ""
-    solution_coords: set[tuple[int, int]] = set()
+    solution_coords: set[tuple[int, int]] = Field(default_factory=set)
     maze: Maze | None = None
+    blocked_positions: set[tuple[int, int]] = set()
 
     def generate(self) -> "Maze":
         if self.seed is not None:
             random.seed(self.seed)
 
-        self.maze = Maze(**self.model_dump()) 
+        self.maze = Maze(**self.model_dump())
         self.maze.initialize_cells()
 
-        blocked_positions = centered_positions(
-        FORTY_TWO_PATTERN,
-        self.maze.width,
-        self.maze.height,
+        self.blocked_positions = centered_positions(
+         FORTY_TWO_PATTERN,
+         self.maze.width,
+         self.maze.height,
         )
 
-        if self.maze.entry in blocked_positions:
+        if self.maze.entry in self.blocked_positions:
             self.maze.entry = (0, 0)
+            self.maze.exit = (
+                self.maze.width - 1,
+                self.maze.height - 1,
+            )
 
-        if self.maze.exit in blocked_positions:
+        if self.maze.exit in self.blocked_positions:
+            self.maze.entry = (0, 0)
             self.maze.exit = (
                 self.maze.width - 1,
                 self.maze.height - 1,
@@ -99,7 +88,8 @@ class MazeGenerator(EventEmitter):
         if self.maze.entry == self.maze.exit:
             raise ValueError("Entry and exit cannot be the same cell")
 
-        self.maze.block_cells(blocked_positions)
+        self.maze.block_cells(self.blocked_positions)
+        self.maze.set_blocked_cells(self.blocked_positions)
 
         strategy = get_algorithm(self.algorithm)
         # Passing self to algorithm itself
@@ -107,8 +97,9 @@ class MazeGenerator(EventEmitter):
         strategy.generate_algorithm(self, self.maze)
         if not self.perfect:
             self.make_imperfect(self.maze)
-        solution_strategy = get_solution_algorithm(self.solution_algorithm)
-        solution_path, solution_coords = solution_strategy.generate_solution(self.maze)
+        sol_strategy = get_solution_algorithm(self.solution_algorithm)
+        solution_path, solution_coords = \
+            sol_strategy.generate_solution(self.maze)
         self.solution_path = solution_path
         self.solution_coords = solution_coords
         self.emit(
@@ -119,13 +110,17 @@ class MazeGenerator(EventEmitter):
         self.emit("maze_completed", maze=self.maze, info=None)
         return self.maze
 
-    def would_create_open_3x3(
+    def _would_create_open_3x3(
         self,
         maze: "Maze",
         x: int,
         y: int,
         direction: Direction,
     ) -> bool:
+        """
+        Check whether opening a wall would create a comletely open 3x3 area.
+        """
+
         if maze.width < 3 or maze.height < 3:
             return False
 
@@ -202,56 +197,178 @@ class MazeGenerator(EventEmitter):
     def make_imperfect(
         self,
         maze: "Maze",
-        ) -> None:
-        candidates: list[tuple[int, int, Direction]] = []
-        available_cells = 0
+    ) -> None:
+        required_cells = list(dict.fromkeys((
+            (0, 0),
+            (maze.width - 1, 0),
+            (0, maze.height - 1),
+            (maze.width - 1, maze.height - 1),
+            (maze.width // 2, maze.height // 2),
+        )))
+
+        required_positions = set(required_cells)
+
+        dead_ends: list[tuple[int, int]] = []
 
         for y in range(maze.height):
             for x in range(maze.width):
                 cell = maze.get_cell(x, y)
 
-                if cell.blocked:
-                    continue
+                if (
+                    not cell.blocked
+                    and (x, y) not in required_positions
+                    and len(maze.get_open_neighbors(x, y)) == 1
+                ):
+                    dead_ends.append((x, y))
 
-                available_cells += 1
+        random.shuffle(dead_ends)
 
-                for direction, _ in maze.get_available_neighbors(x, y):
-                    if direction not in (Direction.E, Direction.S):
-                        continue
+        added_edges = 0
 
-                    if cell.has_wall(direction):
-                        candidates.append((x, y, direction))
-
-        random.shuffle(candidates)
-
-        target_openings = max(1, available_cells // 20)
-        opened = 0
-
-        for x, y, direction in candidates:
-            if self.would_create_open_3x3(
-                maze,
-                x,
-                y,
-                direction,
-            ):
+        # First process the four corners and the maze center,
+        # then reduce the remaining dead ends.
+        for x, y in required_cells + dead_ends:
+            if len(maze.get_open_neighbors(x, y)) != 1:
                 continue
 
-            maze.remove_wall(x, y, direction)
-            opened += 1
-            self.emit("cell_updated", generator=self, maze=self.maze, info=dict())
-            if opened >= target_openings:
-                break
+            cell = maze.get_cell(x, y)
 
-        if opened == 0:
-            raise ValueError("Could not create an imperfect maze")
+            neighbor_candidates = [
+                (direction, neighbor)
+                for direction, neighbor
+                in maze.get_available_neighbors(x, y)
+                if (
+                    cell.has_wall(direction)
+                    and not self._would_create_open_3x3(
+                        maze,
+                        x,
+                        y,
+                        direction,
+                    )
+                )
+            ]
+
+            random.shuffle(neighbor_candidates)
+
+            if not neighbor_candidates:
+                continue
+
+            # Prefer neighbors with fewer open connections.
+            direction, _ = min(
+                neighbor_candidates,
+                key=lambda candidate: len(
+                    maze.get_open_neighbors(
+                        candidate[1].x,
+                        candidate[1].y,
+                    )
+                ),
+            )
+
+            maze.remove_wall(x, y, direction)
+            added_edges += 1
+
+            self.emit(
+                "cell_updated",
+                generator=self,
+                maze=maze,
+                info=dict(),
+            )
+
+        # Starting from a perfect maze (a connected tree),
+        # each additional edge creates one independent cycle.
+        if added_edges < 2:
+            wall_candidates: list[
+                tuple[int, int, Direction]
+            ] = []
+
+            for y in range(maze.height):
+                for x in range(maze.width):
+                    cell = maze.get_cell(x, y)
+
+                    if cell.blocked:
+                        continue
+
+                    for direction, _ in (
+                        maze.get_available_neighbors(x, y)
+                    ):
+                        if (
+                            direction in (
+                                Direction.E,
+                                Direction.S,
+                            )
+                            and cell.has_wall(direction)
+                        ):
+                            wall_candidates.append(
+                                (x, y, direction)
+                            )
+
+            random.shuffle(wall_candidates)
+
+            for x, y, direction in wall_candidates:
+                if self._would_create_open_3x3(
+                    maze,
+                    x,
+                    y,
+                    direction,
+                ):
+                    continue
+
+                maze.remove_wall(x, y, direction)
+                added_edges += 1
+
+                self.emit(
+                    "cell_updated",
+                    generator=self,
+                    maze=maze,
+                    info=dict(),
+                )
+
+                if added_edges >= 2:
+                    break
+
+        if added_edges < 2:
+            raise ValueError(
+                "Cannot create at least two loops "
+                "for this maze size"
+            )
+
+        if any(
+            len(maze.get_open_neighbors(x, y)) < 2
+            for x, y in required_cells
+        ):
+            raise ValueError(
+                "Cannot open every corner and "
+                "the maze centre safely"
+            )
+
+        remaining_dead_ends = 0
+
+        for y in range(maze.height):
+            for x in range(maze.width):
+                cell = maze.get_cell(x, y)
+
+                if (
+                    not cell.blocked
+                    and len(maze.get_open_neighbors(x, y)) == 1
+                ):
+                    remaining_dead_ends += 1
+
+        if remaining_dead_ends > 2:
+            raise ValueError(
+                "Cannot reduce the imperfect maze "
+                "to at most two dead-ends"
+            )
 
     def output_text(self) -> str:
         """Return the output format required by the subject."""
 
+        if self.maze is None:
+            raise ValueError("Maze has not been generated")
+
         maze_rows = "\n".join(self.maze.hex_digits)
 
-        entry_x, entry_y = self.entry
-        exit_x, exit_y = self.exit
+        entry_x, entry_y = self.maze.entry
+        exit_x, exit_y = self.maze.exit
 
         return (
             f"{maze_rows}\n\n"
@@ -260,8 +377,7 @@ class MazeGenerator(EventEmitter):
             f"{self.solution_path}\n"
         )
 
-    def export_maze(
-        self) -> None:
+    def export_maze(self) -> None:
         """Write a generated maze and its solution to a file."""
 
         content = self.output_text()

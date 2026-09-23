@@ -247,4 +247,12 @@ could be cool to indicate the user which fields are missing, and then informing 
     REDIRECT EXIT TO WIDHT -1 HEIGHT -1
     FIX THE MENU IN ASCII MODE
     PRINT EXIT AND ENTRY ALWAYS
+    LET THE MAZE DO NOT OVERRIDE SOLUTION OVER PLAY, ENTRY AND EXIT
     
+    need to block boolean to change width and height 
+    need to provide a way to change theme chars and colors 
+
+    need to make it playable 
+    
+    reduce limits to height and width
+

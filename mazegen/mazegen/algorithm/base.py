@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from ..model.maze_generator import MazeGenerator, Maze
+    from ..model import MazeGenerator, Maze
 
 
 class MazeAlgorithmStrategy(ABC):
@@ -12,7 +12,11 @@ class MazeAlgorithmStrategy(ABC):
         self.name = name
 
     @abstractmethod
-    def generate_algorithm(self, generator: "MazeGenerator", maze: "Maze") -> None:
+    def generate_algorithm(
+        self,
+        generator: "MazeGenerator",
+        maze: "Maze"
+    ) -> None:
         raise NotImplementedError("MazeAlgorithmStrategy not implemented")
 
     def _reset_state(self) -> None:
@@ -28,9 +32,12 @@ class MazeAlgorithmStrategy(ABC):
         self.total_cells: int = 0
         self.emit_every: int = 1
 
-    def _maybe_emit(self, **kwargs: dict[str, Any]) -> None:
+    def _maybe_emit(self, **kwargs: Any) -> None:
         self.move_count += 1
-        if self.move_count % self.emit_every == 0:
+        if (
+            self.generator is not None
+            and self.move_count % self.emit_every == 0
+        ):
             self.generator.emit(
                 "cell_updated",
                 **kwargs,

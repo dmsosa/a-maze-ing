@@ -11,7 +11,7 @@ WALL_BIT = {"N": 0x1, "E": 0x2, "S": 0x4, "W": 0x8}
 
 
 def has_wall(hex_char: str, direction: str) -> bool:
-    """Decode a single hex digit (WSEN bit layout) without touching Cell/Direction."""
+    """Decode a single hex digit """
     return bool(int(hex_char, 16) & WALL_BIT[direction])
 
 

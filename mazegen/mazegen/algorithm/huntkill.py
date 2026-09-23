@@ -26,7 +26,7 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
 
     def __init__(self, emit_every: int = 1) -> None:
         super().__init__("Hunt and Kill")
-        self._visited: set[tuple[int, int]]= set()
+        self._visited: set[tuple[int, int]] = set()
         if 0 < emit_every < 25:
             self.emit_every = emit_every
         else:
@@ -37,23 +37,19 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
         self,
         generator: "MazeGenerator",
         maze: "Maze"
-        ) -> None:
+    ) -> None:
         # Bind generated maze to the generator
         self._reset_state()
         self.generator = generator
         self.maze = maze
-        visited: set[tuple[int, int]]= set()
+        visited: set[tuple[int, int]] = set()
         current = maze.entry
         visited.add(current)
-        self.total_cells = sum(
-            1
-            for row in maze.cells
-            for cell in row
-            if not cell.blocked
-        )
+        self.total_cells = (
+            generator.width * generator.height
+            ) - len(generator.blocked_positions)
 
         current = maze.entry
-
         visited = visited
         total_cells = self.total_cells
 
@@ -64,7 +60,7 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
 
             unvisited_neighbors = []
 
-            for direction, neighbor in maze.get_available_neighbors(x,y):
+            for direction, neighbor in maze.get_available_neighbors(x, y):
                 neighbor_position = (neighbor.x, neighbor.y)
 
                 if neighbor_position not in visited:
@@ -92,7 +88,7 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
 
                     position = (x, y)
 
-                    cell=maze.get_cell(x,y)
+                    cell = maze.get_cell(x, y)
 
                     if cell.blocked:
                         continue
@@ -102,7 +98,8 @@ class HuntKillAlgorithm(MazeAlgorithmStrategy):
 
                     visited_neighbors = []
 
-                    for direction, neighbor in maze.get_available_neighbors(x, y):
+                    for direction, neighbor \
+                            in maze.get_available_neighbors(x, y):
                         neighbor_position = (neighbor.x, neighbor.y)
 
                         if neighbor_position in visited:

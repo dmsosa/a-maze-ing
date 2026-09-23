@@ -10,7 +10,10 @@ class BFSSolutionStrategy(MazeSolutionStrategy):
     def __init__(self) -> None:
         super().__init__("Breadth-First Search Solution Algorithm")
 
-    def generate_solution(self, maze: "Maze") -> tuple[str, set[tuple[int, int]]]:
+    def generate_solution(
+            self,
+            maze: "Maze"
+    ) -> tuple[str, set[tuple[int, int]]]:
         solution_path = self._solve_bfs(maze)
         solution_coords = self.path_to_coordinates(maze.entry, solution_path)
         return solution_path, solution_coords
@@ -85,9 +88,9 @@ class BFSSolutionStrategy(MazeSolutionStrategy):
         current = end
 
         while current != start:
-            parent, direction = previous[current]
+            parent, direct = previous[current]
 
-            path.append(direction)
+            path.append(direct)
             current = parent
 
         path.reverse()

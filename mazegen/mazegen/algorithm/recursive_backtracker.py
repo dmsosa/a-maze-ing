@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ..model.maze_generator import MazeGenerator
 
 
-class RecursiveBacktrackerAlgorithm(MazeAlgorithmStrategy):
+class RBacktrackerAlgorithm(MazeAlgorithmStrategy):
 
     """
     Generate a maze using the Recursive Backtracker algorithm.

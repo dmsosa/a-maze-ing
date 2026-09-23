@@ -1,63 +1,192 @@
 # src/player/play_manager.py
 from enum import Enum, auto
 import sys
-from typing import TYPE_CHECKING
 from mazegen import MazeGenerator
-from player.constants import BOLD, RESET
-from player.utils import print_goodbye, print_line
-from render.ascii.utils import clear_screen, hex_to_ansi_fg, move_cursor
-from .keys import MenuKey, read_menu_key
-from .menu import Menu, MenuItem, print_menu_ansi, print_menu_ascii
+from player.constants import USERNAME_REGEXP
+from player.utils import print_exit_play
+from render.ascii.utils import clear_from_cursor, clear_screen, move_cursor
+from .keys import get_key
+from .menu import Menu, MenuItem,  print_menu_ansi, \
+      print_menu_ascii, print_menu_lines_ansi, print_menu_lines_ascii
 from config import MazeConfiguration
 from render import MazeRenderer
 
 
-class PlayState(Enum):
-    MENU = auto()
-    CONFIG_MENU = auto()
-    EXIT = auto()
+class PlayOption(Enum):
+    UP = auto()
+    DOWN = auto()
+    LEFT = auto()
+    RIGHT = auto()
+    JUMP = auto()
+    SOLUTION = auto()
+    QUIT = auto()
+
+
+class PlayDirection(Enum):
+    N = "N"
+    E = "E"
+    S = "S"
+    W = "W"
 
 
 class PlayManager:
-    def __init__(self, maze_config: "MazeConfiguration", generator: "MazeGenerator", render: "MazeRenderer") -> None:
+    """
+    This class needs the following information:
+    self.game_over to determine when the game is ended
+    self.handle_input
+    self.options: dict[str, set[str]],
+    to handle the input and determine which option was pressed,
+    play manager iterates over all of its options, and checks if pressed_key
+    is included in any of the option_set. If it is not, then it ignores key
+    and continues to the next iteration of the loop
+    """
+    def __init__(
+            self,
+            maze_config: "MazeConfiguration",
+            generator: "MazeGenerator",
+            render: "MazeRenderer"
+            ) -> None:
         self.generator = generator
         self.render = render
         self.maze_config = maze_config
-        self.state = PlayState.MENU
         self.game_over = False
-        self.color: bool = False
-        self.theme_color = render.theme_color
-        self.menu = Menu(
-            name="A-Maze-Ing Menu",
-            items=[
-            MenuItem("S", "Show solution", self.show_solution),
-            MenuItem("E", "Edit configuration", lambda : print("Hello")),
-            MenuItem("G", "Generate a new maze", self.generate_new_maze),
-            MenuItem("P", "Play", self.enter_play_mode),
-            MenuItem("Q", "Quit", self.quit),
-        ])
-        self.config_menu: Menu | None = None  # built lazily in open_edit_config
-        self.config_menu = Menu(
-            name="Edit A-Maze-Ing Configuration",
-            items=[
-            MenuItem("I", "Width", lambda : print("Hello")),
-            MenuItem("H", "Height", lambda : print("Hello")),
-            MenuItem("P", "Perfect", lambda : print("Hello")),
-            MenuItem("A", "Algorithm", lambda : print("Hello")),
-            MenuItem("N", "Entry", lambda : print("Hello")),
-        ])
-    
-    def run(self) -> None:
-        try:
-            while not self.game_over:
-                clear_screen(self.color)
-                self.render.print_grid()
-                self.print_menu()
-                self._handle_input()
-        except Exception as e:
-            raise e
+        self.menu: Menu | None = None
+        self.color: bool = render.color
+        self.fly_mode: bool = False
+        self.move_count: int = 0
+        self.level: int = 1
+        self.score: int = 0
+        self.player_name: str = ""
+        self.output_file: str = "players.txt"
+        self.players: list[tuple[str, int]] = []
 
-    def print_menu(self) -> None:
+    def run(self) -> None:
+        self.input_player_name()
+        while not self.game_over:
+            self.render.play_mode = True
+            if not self.menu:
+                self.menu = Menu(
+                    name="A-Maze-Ing player options",
+                    items=[
+                        MenuItem(
+                            "W",
+                            "Move up",
+                            {"W", "w", "\x1b[A"},
+                            lambda: self.move_player("N")
+                            ),
+                        MenuItem(
+                            "S",
+                            "Move down",
+                            {"S", "s", "\x1b[B"},
+                            lambda: self.move_player("S")
+                            ),
+                        MenuItem(
+                            "D",
+                            "Move right",
+                            {"D", "d", "\x1b[C"},
+                            lambda: self.move_player("E")
+                            ),
+                        MenuItem(
+                            "A",
+                            "Move left",
+                            {"A", "a", "\x1b[D"},
+                            lambda: self.move_player("W")
+                            ),
+                        MenuItem(
+                            "O",
+                            "Show solution",
+                            {"O", "o"},
+                            lambda: self.show_solution()
+                            ),
+                        MenuItem(
+                            "Enter",
+                            "Jump",
+                            {"\r", "\n", "J"},
+                            lambda: self.enter_fly_mode()
+                            ),
+                        MenuItem(
+                            "Q",
+                            "Quit",
+                            {"q", "Q", "\x1b", "\x03"},
+                            lambda: self.quit()
+                            )
+                        ],
+                )
+            clear_screen(self.color)
+            self.render.print_grid()
+            print("\n")
+            self.print_play_status()
+            self.print_menu(self.menu)
+            try:
+                self._handle_input()
+            except KeyError as e:
+                print(
+                    f"Invalid key detected for menu '{self.menu.name}':\n{e}",
+                    file=sys.stderr
+                    )
+                continue
+            except Exception as e:
+                print(
+                    f"Unexpected error for menu '{self.menu.name}':\n{e}",
+                    file=sys.stderr
+                    )
+                continue
+            self.check_game_over()
+
+    def input_player_name(self) -> None:
+        self._cursor_after_maze()
+        clear_from_cursor()
+        print(
+            "... Insert your name, must be written in lowercase: ", flush=True
+        )
+        username = ""
+        while not USERNAME_REGEXP.fullmatch(username) is not None:
+            username = sys.stdin.readline().strip('\n')
+        self.player_name = username
+
+    def print_play_status(self) -> None:
+        items = [
+            f"Current level: {self.level}",
+            f"{self.player_name}'s score: {self.score}",
+            f"Jumper mode: {self.fly_mode}"
+        ]
+        if self.render.color:
+            print_menu_lines_ansi(
+                "Maze Configuration Edit",
+                items,
+                self.render.theme_char,
+                self.render.theme_color,
+                self.render.cell_size
+                )
+        else:
+            print_menu_lines_ascii(
+                "Maze Configuration Edit",
+                items,
+                self.render.theme_char,
+                self.render.cell_size
+                )
+
+    def check_game_over(self) -> None:
+        if self.render.player_pos == self.render.exit:
+            self.level += 1
+            if self.level > 10:
+                self.score += 20
+            elif self.level > 15:
+                self.score += 30
+            elif self.level > 20:
+                self.score += 40
+            elif self.level > 25:
+                self.score += 50
+            else:
+                self.score += 5
+            self.render.player_pos = self.render.entry
+            self.generate_new_maze()
+
+    def _cursor_after_maze(self) -> None:
+        row = self.render.height * 2 + 1
+        move_cursor(row + 3, 1)
+
+    def print_menu(self, active_menu: Menu) -> None:
         chars = [
             self.render.theme_char["corner"][0b0110],
             self.render.theme_char["corner"][0b1100],
@@ -65,69 +194,87 @@ class PlayManager:
             self.render.theme_char["corner"][0b1001],
             self.render.theme_char["wall_n"],
             self.render.theme_char["wall_w"],
-
         ]
-        if self.state == PlayState.MENU:
-            active_menu = self.menu
-        elif self.state == PlayState.CONFIG_MENU:
-            active_menu = self.config_menu
         if self.color:
-            print_menu_ansi(active_menu, chars, self.theme_color)
+            print_menu_ansi(
+                active_menu,
+                chars,
+                self.theme_color,
+                False,
+                self.render.cell_size
+                )
         else:
-            print_menu_ascii(active_menu, chars)
+            print_menu_ascii(
+                active_menu,
+                chars,
+                False,
+                self.render.cell_size
+                )
+
+    def clear_print(self) -> None:
+        clear_screen(self.color)
+        self.render.print_grid()
 
     def quit(self) -> None:
         self.game_over = True
         self.generator.export_maze()
+        self.players.append((self.player_name, self.score))
+        content = ""
+        for p, s in self.players:
+            content += f"{p}: {s}\n"
+        with open(
+            self.output_file,
+            "a",
+            encoding="utf-8",
+            newline="\n",
+        ) as file:
+            file.write(content)
         if self.maze_config.pretty:
-            print_goodbye()
-        print_line(f"saving output file to {self.maze_config.output_file}\n")
+            print_exit_play()
+        self.render.play_mode = False
+        self.game_over = True
 
     def _handle_input(self) -> None:
-        key = read_menu_key()
-        active_menu = self.menu \
-            if self.state == PlayState.MENU \
-            else self.config_menu
-        if key is MenuKey.UP:
-            active_menu.move_up()
-        elif key is MenuKey.DOWN:
-            active_menu.move_down()
-        elif key is MenuKey.SELECT:
-            active_menu.selected_item().action()
-        elif key is MenuKey.EXIT:
-            if self.state == PlayState.CONFIG_MENU:
-                self.state = PlayState.MENU
-            elif self.state == PlayState.MENU:
-                self.generator.export_maze()
-                if self.maze_config.pretty:
-                    print_goodbye()
-                print_line(f"saving output file to {self.maze_config.output_file}\n")
-                sys.exit(0)
-        # IGNORED / QUIT-without-confirmation / anything else -> no-op,
-        # loop asks again. This is the actual "block other keys" behavior.
+        key = get_key()
+        self.menu.get_item(key).action()
 
     # ---- actions ---------------------------------------------------
-
     def show_solution(self) -> None:
         self.render.show_solution = not self.render.show_solution
-        clear_screen(self.color)
-        self.render.print_grid()
-        return
 
-    def open_config_menu(self) -> None:
-        self._display_edit_config_menu()
-        key = read_menu_key()
-        if key is MenuKey.UP:
-            self.menu.move_up()
-        elif key is MenuKey.DOWN:
-            self.menu.move_down()
-        elif key is MenuKey.SELECT:
-            self.menu_config.selected_item().action()
+    def move_player(self, dir: PlayDirection) -> None:
+        """
+        Huge: render knows where to print the player icon instead
+        of empty space thanks to the _cell_state_mask, which is
+        checked inside function print_display_grid, so, the goal
+        of this function is to update the self.render.player_pos
+        and update self.render._cell_state_mask.
+        But there are conditions: the function is going to return and
+        do not move the player if the direction I am trying to move to
+        has a wall or is out of bounds. (which in any case, would have
+        a wall), how to determine that?
+
+        only the render has access to the hexadecimal representation
+        of the maze. It can check walls by checking the current bit in
+        digits[player_pos[1]][player_pos[0]].
+        play manager does not want to check walls.
+        Just ask the render to update itself, then re-print the maze
+        and the playable menu.
+        it checks
+        if has_wall(digits[1][0], direction)
+
+        """
+        if not self.render.set_player_pos(dir):
+            print(
+                "Invalid player movement: from "
+                f"{self.render.player_pos} to {dir}", file=sys.stderr
+            )
+        self.move_count += 1
+
+    def enter_fly_mode(self) -> None:
+        self.render.fly_mode = not self.fly_mode
 
     def generate_new_maze(self) -> None:
         self.generator.seed = (self.generator.seed or 0) + 1
+        self.render.solution_set = set()
         self.generator.generate()
-
-    def enter_play_mode(self) -> None:
-        self.render.play_mode = True
-        self.run()

@@ -1,16 +1,20 @@
-import os, \
-platform, \
-sys, \
-time
+import os
+import platform
+import sys
+import time
 
-        
-def clear_screen(self) -> None:
+
+def clear_screen(is_ansi: bool) -> None:
     """Call this ONCE, before the animation loop starts."""
-    if self._ansi:
+    if is_ansi:
         sys.stdout.write("\033[2J\033[H")
     else:
         os.system("cls" if platform.system() == "Windows" else "clear")
     sys.stdout.flush()
+
+
+def clear_from_cursor() -> None:
+    sys.stdout.write("\x1b[J")
 
 
 def print_char(char: str) -> None:
@@ -22,19 +26,12 @@ def cursor_home() -> None:
 
 
 def hide_cursor() -> None:
-    sys.stdout.write(f"\033[?25l")
+    sys.stdout.write("\033[?25l")
 
 
 def show_cursor() -> None:
-    sys.stdout.write(f"\033[?25h")
+    sys.stdout.write("\033[?25h")
 
-def clear_screen(supports_ansi: bool) -> None:
-    """Call this ONCE, before the animation loop starts."""
-    if supports_ansi:
-        sys.stdout.write("\033[2J\033[H")
-    else:
-        os.system("cls" if platform.system() == "Windows" else "clear")
-    sys.stdout.flush()
 
 def move_cursor(row: int, col: int) -> None:
     sys.stdout.write(f"\033[{row};{col}H")

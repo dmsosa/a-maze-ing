@@ -44,6 +44,7 @@ def validate_solution(maze, solution):
 
     return (x, y) == maze.exit
 
+
 print()
 print("Solution valid:", validate_solution(maze, solution))
 

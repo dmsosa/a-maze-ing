@@ -1,9 +1,3 @@
-from render.ascii.grid import CORNER_CHARS
-
-
-CELL_WIDTH = 3
-
-
 CORNER_CHARS_SIMPLE = {
     0b0000: " ",
     0b0001: "+", 0b0010: "+", 0b0011: "+",
@@ -40,31 +34,13 @@ CORNER_CHARS_DOUBLE = {
 }
 
 
-CORNER_CHARS_HEAVY =  {
+CORNER_CHARS_HEAVY = {
     0b0000: " ",
     0b0001: "━", 0b0010: "┃", 0b0011: "┗",
     0b0100: "━", 0b0101: "┃", 0b0110: "┏", 0b0111: "┠",
     0b1000: "┃", 0b1001: "┛", 0b1010: "━", 0b1011: "┻",
     0b1100: "┓", 0b1101: "┣", 0b1110: "┳", 0b1111: "┿",
 }
-
-
-CORNER_CHARS_DASHED =  {
-    0b0000: " ",
-    0b0001: "▀", 0b0010: "▌", 0b0011: "▀",
-    0b0100: "▄", 0b0101: "▌", 0b0110: "▄", 0b0111: "▌",
-    0b1000: "▐", 0b1001: "▀", 0b1010: "▄", 0b1011: "▀",
-    0b1100: "▄", 0b1101: "▌", 0b1110: "▄", 0b1111: "█",
-},
-
-
-CORNER_CHARS_SHADOW =  {
-    0b0000: " ",
-    0b0001: "▀", 0b0010: "▌", 0b0011: "▀",
-    0b0100: "▄", 0b0101: "▌", 0b0110: "▄", 0b0111: "▌",
-    0b1000: "▐", 0b1001: "▀", 0b1010: "▄", 0b1011: "▀",
-    0b1100: "▄", 0b1101: "▌", 0b1110: "▄", 0b1111: "█",
-},
 
 
 CORNER_CHARS_BLOCK = {
@@ -84,145 +60,127 @@ CORNER_CHARS_MINIMAL = {
     0b1100: "·", 0b1101: "·", 0b1110: "·", 0b1111: "·",
 }
 
+ThemeChar = dict[str, str | dict[int, str]]
 
-RENDER_THEMES_CHARS: dict[str, dict[str, str]] = {
+RENDER_THEMES_CHARS: dict[str, ThemeChar] = {
     "simple": {
-        "wall_n":  "-"*CELL_WIDTH,
+        "wall_n":  "-",
         "wall_w": "|",
-        "space":       " "*CELL_WIDTH,
+        "space":       " ",
         "corner":    CORNER_CHARS_SIMPLE,
-        "current": "@".center(CELL_WIDTH, " "),
-        "visited": "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":   "█"*CELL_WIDTH,
-        "player":     "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":      "🚪".center(CELL_WIDTH, " "),
-        "exit_":       "🔑".center(CELL_WIDTH, " "),
+        "current": " @ ",
+        "visited": " · ",
+        "solution": " ~ ",
+        "hunt_pos": " ? ",
+        "coin": " © ",
+        "blocked":   "█",
+        "player":     " @ ",
+        "entry":      " S ",
+        "exit_":       " E ",
     },
     "classic": {
-        "wall_n":  "─"*CELL_WIDTH,
+        "wall_n":  "─",
         "wall_w": "│",
-        "space":       " "*CELL_WIDTH,
+        "space":       " ",
         "corner":    CORNER_CHARS_CLASSIC,
-        "current": "@".center(CELL_WIDTH, " "),
-        "visited": "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":   "█"*CELL_WIDTH,
-        "player":     "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":      "🚪".center(CELL_WIDTH, " "),
-        "exit_":       "🔑".center(CELL_WIDTH, " "),
+        "current": " @ ",
+        "visited": " · ",
+        "solution": " ~ ",
+        "hunt_pos": " ? ",
+        "coin": " © ",
+        "blocked":   "█",
+        "player":     ":v",
+        "entry":      " S ",
+        "exit_":       " E ",
     },
     "curved": {
-        "wall_n":   "─" * CELL_WIDTH,
+        "wall_n":   "─",
         "wall_w":   "│",
-        "space":    " " * CELL_WIDTH,
+        "space":    " ",
         "corner": CORNER_CHARS_CURVED,
-        "current":  "@".center(CELL_WIDTH, " "),
-        "visited":  "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":  "█" * CELL_WIDTH,
-        "player":   "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":    "🚪".center(CELL_WIDTH, " "),
-        "exit_":    "🔑".center(CELL_WIDTH, " "),
+        "current":  " @ ",
+        "visited":  " · ",
+        "solution": " ~ ",
+        "hunt_pos": " ? ",
+        "coin": "🪙",
+        "blocked":  "█",
+        "player":   "😀",
+        "entry":    "🏠",
+        "exit_":    "🔑",
     },
     "double": {
-        "wall_n":   "═" * CELL_WIDTH,
+        "wall_n":   "═",
         "wall_w":   "║",
-        "space":    " " * CELL_WIDTH,
+        "space":    " ",
         "corner": CORNER_CHARS_DOUBLE,
-        "current":  "@".center(CELL_WIDTH, " "),
-        "visited":  "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":  "█" * CELL_WIDTH,
-        "player":   "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":    "🚪".center(CELL_WIDTH, " "),
-        "exit_":    "🔑".center(CELL_WIDTH, " "),
+        "current":  " @ ",
+        "visited":  " · ",
+        "solution": " ~ ",
+        "hunt_pos": " ? ",
+        "coin": "🍌",
+        "blocked":  "█",
+        "player":   "🙉",
+        "entry":    "🌿",
+        "exit_":    "🪵",
     },
     "heavy": {
-        "wall_n":   "━" * CELL_WIDTH,
+        "wall_n":   "━",
         "wall_w":   "┃",
-        "space":    " " * CELL_WIDTH,
+        "space":    " ",
         "corner": CORNER_CHARS_HEAVY,
-        "current":  "@".center(CELL_WIDTH, " "),
-        "visited":  "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":  "█" * CELL_WIDTH,
-        "player":   "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":    "🚪".center(CELL_WIDTH, " "),
-        "exit_":    "🔑".center(CELL_WIDTH, " "),
-    },
-    "dashed": {
-        "wall_n":   "╌" * CELL_WIDTH,
-        "wall_w":   "╎",
-        "space":    " " * CELL_WIDTH,
-        "corner": CORNER_CHARS_DASHED,
-        "current":  "@".center(CELL_WIDTH, " "),
-        "visited":  "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":  "█" * CELL_WIDTH,
-        "player":   "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":    "🚪".center(CELL_WIDTH, " "),
-        "exit_":    "🔑".center(CELL_WIDTH, " "),
-    },
-    "shadow": {
-        "wall_n":   "▄" * CELL_WIDTH,
-        "wall_w":   "▐",
-        "space":    " " * CELL_WIDTH,
-        "corner": CORNER_CHARS_SHADOW,
-        "current":  "@".center(CELL_WIDTH, " "),
-        "visited":  "·".center(CELL_WIDTH, " "),
-        "solution": "~".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":  "█" * CELL_WIDTH,
-        "player":   "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":    "🚪".center(CELL_WIDTH, " "),
-        "exit_":    "🔑".center(CELL_WIDTH, " "),
+        "current":  " @ ",
+        "visited":  " · ",
+        "solution": " ~ ",
+        "hunt_pos": " ? ",
+        "coin": "🍪",
+        "blocked":  "█",
+        "player":   "🎃",
+        "entry":    "🚪",
+        "exit_":    "☂️",
     },
     "block": {
-        "wall_n":  "▓"*CELL_WIDTH,
+        "wall_n":  "▓",
         "wall_w": "▓",
-        "way":       "░",
-        "space":       " "*CELL_WIDTH,
+        "space":       " ",
         "corner":    CORNER_CHARS_BLOCK,
-        "blocked":   "█"*CELL_WIDTH,
-        "player":     "🚶🏻‍➡️",
+        "current":  " @ ",
+        "visited":  " ░ ",
+        "solution": " ~ ",
+        "hunt_pos": " ? ",
+        "coin": "🚬",
+        "blocked":   "█",
+        "player":     "💀",
         "entry":      "🚪",
-        "exit_":       "🔑",
+        "exit_":       "🥅",
     },
     "minimal": {
-        "wall_n":   "·" * CELL_WIDTH,
-        "wall_w":   "·",
-        "space":    " " * CELL_WIDTH,
+        "wall_n":   "·",
+        "wall_w":   "|",
+        "space":    " ",
         "corner":   CORNER_CHARS_MINIMAL,
-        "current":  "O".center(CELL_WIDTH, " "),
-        "visited":  ".".center(CELL_WIDTH, " "),
-        "solution": "-".center(CELL_WIDTH, " "),
-        "hunt_pos": "?".center(CELL_WIDTH, " "),
-        "blocked":  "█" * CELL_WIDTH,
-        "player":   "🚶🏻‍➡️".center(CELL_WIDTH, " "),
-        "entry":    "🚪".center(CELL_WIDTH, " "),
-        "exit_":    "🔑".center(CELL_WIDTH, " "),
+        "current":  "O",
+        "visited":  ".",
+        "solution": "-",
+        "hunt_pos": " ? ",
+        "coin": "🧀",
+        "blocked":  "█",
+        "player":   "🐭",
+        "entry":    "🕳",
+        "exit_":    "🪤",
     },
 }
-
 
 
 RENDER_THEMES_COLORS: dict[str, dict[str, str]] = {
     "classic": {
         "bg": "#E8C9EB",
-        "wall": "#787878",
+        "wall": "#3E3E3E",
         "way": "#CECECE",
         "current":  "#d58514",
-        "visited":   "#38247E",
+        "visited":   "#6E789D",
         "solution":   "#A1E4AA",
         "hunt_pos": "#ca4700",
-        "blocked":    "#e94560",
+        "blocked":    "#457ee9",
     },
     "matrix": {
         "bg": "#000000",
@@ -230,7 +188,7 @@ RENDER_THEMES_COLORS: dict[str, dict[str, str]] = {
         "current":  "#00ff41",
         "entry":      "#00cc33",
         "exit_":       "#ffffff",
-        "way":        "#008822",
+        "way":        "#00C932",
         "blocked":    "#005500",
     },
     "ocean": {
@@ -312,27 +270,29 @@ RENDER_THEMES_COLORS: dict[str, dict[str, str]] = {
         "current": "#ffff00",
         "entry":   "#00ffff",
         "exit_":   "#ff0000",
-        "way":     "#ffb8ae",
-        "blocked": "#ff00ff",
+        "way":     "#242424",
+        "blocked": "#fdbe00",
     },
 }
 
 
-def get_theme_chars(name: str) -> dict[str, str]:
+def get_theme_chars(name: str) -> ThemeChar:
     names = set(RENDER_THEMES_CHARS.keys())
     if name not in names:
-        raise KeyError("" \
-            f"Unknown theme '{name}'. \
-            Available: {names}" \
-            "")
+        raise KeyError(f"Unknown theme '{name}'.Available: {names}")
     return RENDER_THEMES_CHARS[name]
 
 
 def get_theme_colors(name: str) -> dict[str, str]:
     names = set(RENDER_THEMES_COLORS.keys())
     if name not in names:
-        raise KeyError("" \
-            f"Unknown theme '{name}'. \
-            Available: {names}" \
-            "")
+        raise KeyError(f"Unknown theme '{name}'. Available: {names}")
     return RENDER_THEMES_COLORS[name]
+
+
+MOVE_DELTAS: dict[str, tuple[int, int]] = {
+    "N": (0, -1),
+    "E": (1, 0),
+    "S": (0, 1),
+    "W": (-1, 0),
+}

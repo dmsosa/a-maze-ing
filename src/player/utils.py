@@ -1,7 +1,7 @@
-import sys, \
-time
+import sys
+import time
 
-from player.constants import BOLD, CYAN, GREEN, RED, RESET, YELLOW
+from constants import BOLD, CYAN, GREEN, RED, RESET, YELLOW
 
 
 def print_line(s, delay=0.05) -> None:
@@ -19,6 +19,7 @@ def erase_line(s, delay=0.05) -> None:
         time.sleep(delay)
     sys.stdout.write("\r")
 
+
 # ── Message store ──────────────────────────────────────────────
 MESSAGES = [
     # index 0 – title
@@ -26,11 +27,14 @@ MESSAGES = [
     # index 1 – subtitle
     "Enjoy, and find your way ;)",
     # index 2 -- instructions
-    "Use W/S or ↑/↓ to navigate. \
-Type 'quit' to exit, Ctrl+C to interrupt, \
-Ctrl+D for EOF.",
+    (
+        "Use W/S or ↑/↓ to navigate. Type 'quit' to exit, "
+        "Ctrl+C to interrupt, Ctrl+D for EOF."
+    ),
     # index 3 – goodbye
-    "Thanks for playing A MAZE ING! You'll be back for more.",
+    "Closing A MAZE ING program, come back soon.",
+    "An error stopped the execution of the program:\n",
+    "Thanks for playing A MAZE ING! You'll be back for more.\n",
     # index 4+ – motivation (success / failure)
     f"{BOLD}{GREEN}Nice move! Keep it up!{RESET}",
     f"{YELLOW}So close! Try a different path.{RESET}",
@@ -40,22 +44,24 @@ Ctrl+D for EOF.",
     f"{BOLD}{RED}Ouch! That wall bit back.{RESET}",
 ]
 
-TITLE  = 0
-SUBTITLE  = 1
-INSTRUCTIONS  = 2
-GOODBYE  = 3
-MOTIVATE = list(range(4, len(MESSAGES)))   # indices for random pick
+TITLE = 0
+SUBTITLE = 1
+INSTRUCTIONS = 2
+GOODBYE = 3
+ERROR = 4
+EXIT_PLAY = 5
+MOTIVATE = list(range(6, len(MESSAGES)))  # indices for random pick
 
 
-# ── Helper: ANSI "typing" illusion ─────────────────────────────
+# ── Helper: ANSI typing illusion ────────────────────────────────
 def _type_out(text: str, delay: float = 0.03) -> None:
     """Print *text* one character at a time (ANSI cursor tricks)."""
-    print("\033[?25l", end="")          # hide cursor
+    print("\033[?25l", end="")  # hide cursor
     for ch in text:
         print(ch, end="", flush=True)
         time.sleep(delay)
-    print("\033[?25h")                   # show cursor again
-    print()                              # newline
+    print("\033[?25h")  # show cursor again
+    print()  # newline
 
 
 def _plain(text: str) -> None:
@@ -70,12 +76,35 @@ def print_presentation() -> None:
     erase_line(MESSAGES[TITLE])
     print_line(f"{BOLD}{GREEN}{MESSAGES[SUBTITLE]}{RESET}")
 
+
 def print_goodbye(prettify: bool = True) -> None:
     _type_out(MESSAGES[GOODBYE]) if prettify else _plain(MESSAGES[GOODBYE])
 
 
+def print_exit_play(prettify: bool = True) -> None:
+    _type_out(MESSAGES[EXIT_PLAY]) if prettify else _plain(MESSAGES[EXIT_PLAY])
+
+
+def print_error(error: Exception, prettify: bool = True) -> None:
+    _type_out(MESSAGES[ERROR]) if prettify else _plain(MESSAGES[GOODBYE])
+    print(error)
+
+
 def print_motivation(success: bool = True, prettify: bool = True) -> None:
     import random
+
     pool = MOTIVATE[::2] if success else MOTIVATE[1::2]
     msg = random.choice(pool)
     _type_out(msg) if prettify else _plain(msg)
+
+
+# -- Conversion utils ---------------------------------------------
+def str_to_coords(s: str) -> tuple[int, int]:
+    """Convert '3,5' or '(3, 5)' to (3, 5)."""
+    s = s.strip().strip("()")
+    parts = s.split(",")
+    if len(parts) != 2:
+        raise ValueError(
+            f"Invalid coordinate format: '{parts}', must be '(x, y)'"
+        )
+    return (int(parts[0]), int(parts[1]))

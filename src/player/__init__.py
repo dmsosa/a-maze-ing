@@ -1,4 +1,4 @@
-from .play_manager import PlayManager
+from .menu_manager import MenuManager
 __all__ = [
-    "PlayManager"
+    "MenuManager"
 ]

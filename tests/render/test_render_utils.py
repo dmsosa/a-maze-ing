@@ -91,4 +91,4 @@ def test_cursor_save_restore_sequence(capsys: Any) -> None:
     move_cursor(5, 5)
     restore_cursor()
     out = capsys.readouterr().out
-    assert out == "\033[s\033[5;5H\033[u"   
+    assert out == "\033[s\033[5;5H\033[u"

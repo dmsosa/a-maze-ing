@@ -2,11 +2,11 @@ import sys
 
 from mazegen import MazeGenerator
 from mazegen.model.cell import Direction
-from mazegen.model.constants import MazeAlgorithm
 from mazegen.model.maze import Maze
 from config.config import MazeConfiguration
 from render.ascii.render_ascii import MazeRendererASCII
-from render.ascii.utils import clear_screen, cursor_home, move_cursor, move_cursor_right, move_cursor_up, print_char, print_square
+from render.ascii.utils import clear_screen, cursor_home, move_cursor, \
+    move_cursor_right, move_cursor_up, print_char, print_square
 
 
 CELL_WIDTH = 2
