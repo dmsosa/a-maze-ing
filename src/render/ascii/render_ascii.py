@@ -1,7 +1,7 @@
 import random
 import sys
 from time import sleep
-from typing import Any
+from typing import Any, cast
 
 from exception.render_exception import RenderError
 from mazegen import Maze
@@ -9,6 +9,7 @@ from render.ascii.constants import (
     MOVE_DELTAS,
     RENDER_THEMES_CHARS,
     RENDER_THEMES_COLORS,
+    ThemeChar,
 )
 from render.ascii.grid import has_wall, wall_go_to
 from .utils import (
@@ -31,14 +32,14 @@ class MazeRendererASCII(MazeRenderer):
         self.exit: tuple[int, int] | None = None
         self.grid_width: int = 0
         self.grid_height: int = 0
-        self.digits: list[str] = 0
+        self.digits: list[str] = []
         self._render_count: int = 0
         self._frame_delay: float = 0.025
         self.context: dict[str, Any] = dict()
         self.solution_set: set[tuple[int, int]] = set()
         self.coin_set: set[tuple[int, int]] = set()
-        self.player_pos: tuple[int, int] | None = None
-        self.theme_char: dict[str, str] = RENDER_THEMES_CHARS["curved"]
+        self.player_pos: tuple[int, int] = (0, 0)
+        self.theme_char: ThemeChar = RENDER_THEMES_CHARS["curved"]
         self.theme_color: dict[str, str] = RENDER_THEMES_COLORS["pacman"]
         self.play_mode: bool = False
         self.color: bool = False
@@ -46,10 +47,10 @@ class MazeRendererASCII(MazeRenderer):
         self.fly_mode: bool = False
         self.blocked_cells: set[tuple[int, int]] = set()
 
-    def set_frame_delay(self, value: float):
+    def set_frame_delay(self, value: float) -> None:
         self._frame_delay = min(max(value, 0.0), 30.0)
 
-    def set_maze_generated(self, value: bool):
+    def set_maze_generated(self, value: bool) -> None:
         self._maze_generated = value
 
     def render(
@@ -150,9 +151,9 @@ class MazeRendererASCII(MazeRenderer):
         grid = [["" for _ in range(cols)] for _ in range(rows)]
         is_wall = [[False for _ in range(cols)] for _ in range(rows)]
         theme = self.theme_char
-        wall_n = self.theme_char["wall_n"] * self.cell_size
-        wall_w = self.theme_char["wall_w"]
-        space = self.theme_char["space"] * self.cell_size
+        wall_n = cast(str, self.theme_char["wall_n"]) * self.cell_size
+        wall_w = cast(str, self.theme_char["wall_w"])
+        space = cast(str, self.theme_char["space"]) * self.cell_size
 
         # corners
         for cy in range(self.height + 1):
@@ -198,14 +199,17 @@ class MazeRendererASCII(MazeRenderer):
         # room interiors
         for y in range(self.height):
             for x in range(self.width):
-                if (x, y) == self.player_pos and self.play_mode:
-                    cell_char = self._center_char(theme["player"])
+                if (x, y) == self.player_pos \
+                    and self.play_mode \
+                        and self.entry != self.player_pos:
+                    char = cast(str, theme["player"])
                 elif (x, y) == self.entry:
-                    cell_char = self._center_char(theme["entry"])
+                    char = cast(str, theme["entry"])
                 elif (x, y) == self.exit:
-                    cell_char = self._center_char(theme["exit_"])
+                    char = cast(str, theme["exit_"])
                 else:
-                    cell_char = space
+                    char = space
+                cell_char = self._center_char(char)
                 grid[y * 2 + 1][x * 2 + 1] = cell_char
 
         self.display_grid = grid
@@ -246,8 +250,8 @@ class MazeRendererASCII(MazeRenderer):
     def _print_grid(self) -> None:
         h = len(self.display_grid)
         w = len(self.display_grid[0])
-        space = self.theme_char["space"] * self.cell_size
-        blocked = self.theme_char["blocked"] * self.cell_size
+        space = cast(str, self.theme_char["space"]) * self.cell_size
+        blocked = cast(str, self.theme_char["blocked"]) * self.cell_size
         for y in range(h):
             line = []
             for x in range(w):
@@ -259,42 +263,30 @@ class MazeRendererASCII(MazeRenderer):
                 if y % 2 == 1 and x % 2 == 1:
                     state = self._cell_state_mask[y // 2][x // 2]
                     if state == "current":
-                        line.append(
-                            self._center_char(
-                                self.theme_char.get("current", space)
-                            )
-                        )
+                        char = cast(str, self.theme_char.get("current", space))
+                        line.append(self._center_char(char))
                         continue
                     elif state == "visited":
-                        line.append(
-                            self._center_char(
-                                self.theme_char.get("visited", space)
-                            )
-                        )
+                        char = cast(str, self.theme_char.get("visited", space))
+                        line.append(self._center_char(char))
                         continue
                     elif state == "hunt_pos":
-                        line.append(
-                            self._center_char(
-                                self.theme_char.get("hunt_pos", space)
+                        char = cast(
+                            str,
+                            self.theme_char.get("hunt_pos", space)
                             )
-                        )
+                        line.append(self._center_char(char))
                         continue
                     elif state == "coin" and self.play_mode:
-                        line.append(
-                            self._center_char(
-                                self.theme_char.get("coin", space)
-                            )
-                        )
+                        char = cast(str, self.theme_char.get("coin", space))
+                        line.append(self._center_char(char))
                         continue
                     elif (
                         self.player_pos == ((x - 1) // 2, (y - 1) // 2)
                         and self.play_mode
                     ):
-                        line.append(
-                            self._center_char(
-                                self.theme_char.get("player", space)
-                            )
-                        )
+                        char = cast(str, self.theme_char.get("player", space))
+                        line.append(self._center_char(char))
                         continue
                     elif (
                         ((x - 1) // 2, (y - 1) // 2) in self.solution_set
@@ -302,11 +294,11 @@ class MazeRendererASCII(MazeRenderer):
                         and ((x - 1) // 2, (y - 1) // 2) != self.entry
                         and ((x - 1) // 2, (y - 1) // 2) != self.exit
                     ):
-                        line.append(
-                            self._center_char(
-                                self.theme_char.get("solution", space)
+                        char = cast(
+                            str,
+                            self.theme_char.get("solution", space)
                             )
-                        )
+                        line.append(self._center_char(char))
                         continue
                     is_blocked = (
                         self.wall_mask[y + 1][x]
@@ -354,11 +346,13 @@ class MazeRendererASCII(MazeRenderer):
                         line.append(f"{solution_bg}{ch}{reset}")
                         continue
                     elif state == "player" and self.play_mode:
-                        ch = self._center_char(self.theme_char["player"])
+                        ch = cast(str, self.theme_char["player"])
+                        ch = self._center_char(ch)
                         line.append(f"{way_bg}{ch}{reset}")
                         continue
                     elif state == "coin" and self.play_mode:
-                        ch = self._center_char(self.theme_char["hunt_pos"])
+                        ch = cast(str, self.theme_char["hunt_pos"])
+                        ch = self._center_char(ch)
                         line.append(f"{way_bg}{ch}{reset}")
                         continue
                     else:

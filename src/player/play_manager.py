@@ -1,6 +1,7 @@
 # src/player/play_manager.py
 from enum import Enum, auto
 import sys
+from typing import cast
 from mazegen import MazeGenerator
 from player.constants import USERNAME_REGEXP
 from player.utils import print_exit_play
@@ -187,19 +188,26 @@ class PlayManager:
         move_cursor(row + 3, 1)
 
     def print_menu(self, active_menu: Menu) -> None:
+        theme = self.render.theme_char
+        corner_br = theme["corner"][0b0110]
+        corner_bl = theme["corner"][0b1010]
+        corner_ur = theme["corner"][0b0011]
+        corner_ul = theme["corner"][0b1001]
+        wall_n = cast(str, theme["wall_n"])
+        wall_w = cast(str, theme["wall_w"])
         chars = [
-            self.render.theme_char["corner"][0b0110],
-            self.render.theme_char["corner"][0b1100],
-            self.render.theme_char["corner"][0b0011],
-            self.render.theme_char["corner"][0b1001],
-            self.render.theme_char["wall_n"],
-            self.render.theme_char["wall_w"],
+            corner_br,
+            corner_bl,
+            corner_ur,
+            corner_ul,
+            wall_n,
+            wall_w,
         ]
         if self.color:
             print_menu_ansi(
                 active_menu,
                 chars,
-                self.theme_color,
+                self.render.theme_color,
                 False,
                 self.render.cell_size
                 )
@@ -231,18 +239,20 @@ class PlayManager:
             file.write(content)
         if self.maze_config.pretty:
             print_exit_play()
+        self.render.player_pos = (0, 0)
         self.render.play_mode = False
         self.game_over = True
 
     def _handle_input(self) -> None:
         key = get_key()
-        self.menu.get_item(key).action()
+        menu = cast(Menu, self.menu)
+        menu.get_item(key).action()
 
     # ---- actions ---------------------------------------------------
     def show_solution(self) -> None:
         self.render.show_solution = not self.render.show_solution
 
-    def move_player(self, dir: PlayDirection) -> None:
+    def move_player(self, dir: str) -> None:
         """
         Huge: render knows where to print the player icon instead
         of empty space thanks to the _cell_state_mask, which is

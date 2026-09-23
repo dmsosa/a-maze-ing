@@ -54,7 +54,7 @@ def print_menu_lines_ascii(
         items: list[str],
         theme_char: dict[str, Any],
         scale: int = 3
-        ):
+        ) -> None:
 
     chars = [
             theme_char["corner"][0b0110],
@@ -94,7 +94,7 @@ def print_menu_lines_ansi(
         theme_char: dict[str, Any],
         theme_color: dict[str, Any],
         scale: int = 3
-        ):
+        ) -> None:
     chars = [
         theme_char["corner"][0b0110],
         theme_char["corner"][0b1100],
@@ -146,7 +146,7 @@ def print_menu_ascii(
         chars: list[str],
         mark: bool = True,
         scale: int = 3
-        ):
+        ) -> None:
     corner_ul = chars[0]
     corner_ur = chars[1]
     corner_bl = chars[2]
@@ -181,7 +181,7 @@ def print_menu_ansi(
         theme_color: dict[str, str],
         mark: bool = True,
         scale: int = 3
-        ):
+        ) -> None:
     corner_ul = chars[0]
     corner_ur = chars[1]
     corner_bl = chars[2]

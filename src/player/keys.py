@@ -16,7 +16,6 @@ class MenuKey(Enum):
     DOWN = auto()
     SELECT = auto()
     EXIT = auto()
-    IGNORED = auto()
 
 
 class PlayMenuKey(Enum):
@@ -39,7 +38,7 @@ _ENTER = {"\r", "\n"}
 _EXIT = {"q", "Q", "\x1b", "\x03"}  # bare ESC and Ctrl+C
 
 
-def get_key():
+def get_key() -> str:
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     try:
@@ -69,7 +68,7 @@ def _read_logical_key(delay: float = 0.05) -> str:
     return first
 
 
-def read_menu_key() -> MenuKey:
+def read_menu_key() -> MenuKey | str:
     raw = get_key()
     if raw in _ARROW_UP:
         return MenuKey.UP
@@ -104,6 +103,8 @@ def read_boolean_key() -> bool:
         if key is MenuKey.EXIT:
             break
         move_cursor_up(3)
+    msg = "Cancelled the select boolean operation"
+    raise ValueError(msg)
 
 
 def read_algorithm_key() -> MazeAlgorithm:
@@ -126,6 +127,8 @@ def read_algorithm_key() -> MazeAlgorithm:
         if key is MenuKey.EXIT:
             break
         move_cursor_up(values_len + 1)
+    msg = "Cancelled the select algorithm operation"
+    raise ValueError(msg)
 
 
 def read_sol_algorithm_key() -> SolutionAlgorithm:
@@ -148,6 +151,8 @@ def read_sol_algorithm_key() -> SolutionAlgorithm:
         if key is MenuKey.EXIT:
             break
         move_cursor_up(values_len + 1)
+    msg = "Cancelled the select solution_algorithm operation"
+    raise ValueError(msg)
 
 
 def read_theme_char_key() -> str:
@@ -170,6 +175,8 @@ def read_theme_char_key() -> str:
         if key is MenuKey.EXIT:
             break
         move_cursor_up(values_len + 1)
+    msg = "Cancelled the select theme_char operation"
+    raise ValueError(msg)
 
 
 def read_theme_color_key() -> str:
@@ -192,3 +199,5 @@ def read_theme_color_key() -> str:
         if key is MenuKey.EXIT:
             break
         move_cursor_up(values_len + 1)
+    msg = "Cancelled the select theme_color operation"
+    raise ValueError(msg)

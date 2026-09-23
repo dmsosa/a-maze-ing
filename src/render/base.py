@@ -1,12 +1,33 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from render.ascii.constants import ThemeChar
+
+if TYPE_CHECKING:
+    from mazegen import Maze
 
 
 class MazeRenderer(ABC):
     wall_mask: list[list[bool]] = []
+    play_mode: bool
+    color: bool
+    show_solution: bool
+    fly_mode: bool
+    solution_set: set[tuple[int, int]] = set()
+    theme_char: ThemeChar
+    theme_color: dict[str, str]
+    player_pos: tuple[int, int] | None = None
+    entry: tuple[int, int] | None = None
+    exit: tuple[int, int] | None = None
+    height: int
+    width: int
 
     @abstractmethod
-    def render(self, info: dict[str, Any] | None = None) -> None:
+    def render(
+                self,
+                maze: "Maze",
+                info: dict[str, Any] | None = None
+            ) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -18,7 +39,7 @@ class MazeRenderer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def render_clean_up(self, **kwargs: Any) -> str:
+    def render_clean_up(self, **kwargs: Any) -> None:
         raise NotImplementedError
 
     @abstractmethod

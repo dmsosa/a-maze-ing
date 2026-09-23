@@ -1,5 +1,5 @@
-from .ascii.render_ascii import MazeRenderer, MazeRendererASCII
-
+from .ascii.render_ascii import MazeRendererASCII
+from .base import MazeRenderer
 
 __all__ = [
     "MazeRenderer",

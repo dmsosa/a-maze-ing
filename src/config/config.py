@@ -3,7 +3,7 @@ from enum import Enum
 from functools import lru_cache
 import re
 import sys
-from typing import Any, Set, Tuple
+from typing import Any, Set, Tuple, cast
 from config.utils import DEFAULT_COORD, print_sleep, random_coord, valid_coord
 from constants import KEY_REGEXP, SNAKE_CASE_REGEXP
 from mazegen import MazeAlgorithm, SolutionAlgorithm
@@ -97,7 +97,11 @@ class MazeConfiguration(BaseModel):
         return set(cls.__annotations__.keys())
 
     @staticmethod
-    def parse(raw: str, verbose: bool = False, debug=True) -> dict[str, Any]:
+    def parse(
+                raw: str,
+                verbose: bool = False,
+                debug: bool = True
+            ) -> dict[str, Any]:
         """
         Reads configuration file, returns a dictionary.
         Check following errors:
@@ -118,7 +122,7 @@ class MazeConfiguration(BaseModel):
         lines: list[str] = raw.split('\n')
         lines_len: int = len(lines)
         nl_count: int = 0
-        config: dict[str, str] = {}
+        config: dict[str, Any] = {}
         for i in range(0, lines_len):
             line = lines[i]
             if nl_count > 1:
@@ -172,13 +176,15 @@ class MazeConfiguration(BaseModel):
                     i
                 )
         if isinstance(config["entry"], str):
+            coord_to_parse = cast(str, config.get("entry", ""))
             config["entry"] = MazeConfiguration.parse_coords(
-                config.get("entry"),
+                coord_to_parse,
                 verbose
             )
         if isinstance(config["exit"], str):
+            coord_to_parse = cast(str, config.get("exit", ""))
             config["exit"] = MazeConfiguration.parse_coords(
-                config.get("exit"),
+                coord_to_parse,
                 verbose
                 )
         if not valid_coord(
@@ -235,8 +241,11 @@ class MazeConfiguration(BaseModel):
         return config
 
     @staticmethod
-    def parse_coords(value: str, verbose: bool = False, debug=True
-                     ) -> tuple[int, int]:
+    def parse_coords(
+                value: str,
+                verbose: bool = False,
+                debug: bool = True
+            ) -> tuple[int, int]:
         coord = value.split(",")
         if len(coord) != 2:
             msg = "" \

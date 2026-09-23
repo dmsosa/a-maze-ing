@@ -12,11 +12,11 @@ def random_coord(
     return (random.randint(0, width), random.randint(0, height))
 
 
-def valid_coord(coord: tuple[int, int], w: int, h: int):
+def valid_coord(coord: tuple[int, int], w: int, h: int) -> bool:
     return (0 <= coord[0] < w and 0 <= coord[1] < h)
 
 
-def print_sleep(msg: str, delay=1.05):
+def print_sleep(msg: str, delay: float = 1.05) -> None:
     print(msg)
     time.sleep(delay)
 

@@ -17,3 +17,15 @@ asdsa: 40
 opl: 0
 papa: 5
 saffd: 20
+apap: 10
+opal: 15
+papa: 5
+papa: 5
+ppa: 5
+papa: 0
+papa: 5
+papa: 0
+papa: 0
+loco: 5
+papapas: 5
+sadasd: 0

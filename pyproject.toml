@@ -40,6 +40,9 @@ optional = true
 pythonpath = ["src"]
 testpaths = ["tests"]
 
+[tool.mypy]
+mypy_path = "."
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

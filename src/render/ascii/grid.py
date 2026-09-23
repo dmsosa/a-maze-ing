@@ -15,7 +15,14 @@ def has_wall(hex_char: str, direction: str) -> bool:
     return bool(int(hex_char, 16) & WALL_BIT[direction])
 
 
-def wall_go_to(digits, cx, cy, width, height, direction) -> bool:
+def wall_go_to(
+        digits: list[str],
+        cx: int,
+        cy: int,
+        width: int,
+        height: int,
+        direction: str
+        ) -> bool:
     """
     The goal with the corners is to check:
     if this is the first row, first col, put the left corner

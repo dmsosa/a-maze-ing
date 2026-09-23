@@ -1,6 +1,6 @@
 import random
 from collections import defaultdict
-from typing import Callable
+from typing import Any, Callable
 
 from pydantic import BaseModel, Field, PrivateAttr
 from .constants import SNAKE_CASE_REGEXP
@@ -18,19 +18,24 @@ class EventEmitter(BaseModel):
     """
     The Subject interface declares a set of methods for managing subscribers.
     """
-    _listeners: defaultdict[str, list[Callable]] = PrivateAttr(
-            default_factory=lambda: defaultdict[str, list[Callable]](list)
+    _listeners: defaultdict[str, list[Callable[..., Any]]] = PrivateAttr(
+            default_factory=lambda: defaultdict[
+                str,
+                list[
+                    Callable[..., Any]
+                    ]
+                ](list)
         )
 
-    def on(self, event, callback: Callable) -> None:
+    def on(self, event: str, callback: Callable[..., Any]) -> None:
         """Subscribe a callback to a specific event type."""
         self._listeners[event].append(callback)
 
-    def off(self, event, callback: Callable) -> None:
+    def off(self, event: str, callback: Callable[..., Any]) -> None:
         """Unsubscribe a callback from a specific event type."""
         self._listeners[event].remove(callback)
 
-    def emit(self, event: str, **data) -> None:
+    def emit(self, event: str, **data: Any) -> None:
         """Emit an event — only listeners for that type are called."""
         for callback in self._listeners.get(event, []):
             callback(**data)

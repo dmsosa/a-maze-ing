@@ -4,14 +4,14 @@ import time
 from constants import BOLD, CYAN, GREEN, RED, RESET, YELLOW
 
 
-def print_line(s, delay=0.05) -> None:
+def print_line(s: str, delay: float = 0.05) -> None:
     for ch in s:
         sys.stdout.write(ch)
         sys.stdout.flush()
         time.sleep(delay)
 
 
-def erase_line(s, delay=0.05) -> None:
+def erase_line(s: str, delay: float = 0.05) -> None:
     sys.stdout.write("\r")
     for ch in s:
         sys.stdout.write(" ")
@@ -94,7 +94,8 @@ def print_motivation(success: bool = True, prettify: bool = True) -> None:
     import random
 
     pool = MOTIVATE[::2] if success else MOTIVATE[1::2]
-    msg = random.choice(pool)
+    msg_idx = random.choice(pool)
+    msg = MESSAGES[msg_idx]
     _type_out(msg) if prettify else _plain(msg)
 
 

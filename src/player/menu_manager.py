@@ -1,11 +1,13 @@
 # src/player/menu_manager.py
 from enum import Enum, auto
 import sys
+from typing import Any, cast
 
 from mazegen import MazeGenerator
 from pydantic import ValidationError
 
 from config import MazeConfiguration
+from exception.config_exception import MazeConfigException
 from player.utils import print_goodbye, print_line, str_to_coords
 from render import MazeRenderer
 from render.ascii import get_theme_chars, get_theme_colors
@@ -55,6 +57,7 @@ class MenuManager:
         self.play_manager: PlayManager | None = None  # built lazily
 
     def run(self) -> None:
+        active_menu = None
         while self.state is not MenuState.EXIT:
             if not self.menu:
                 self.menu = Menu(
@@ -100,6 +103,8 @@ class MenuManager:
                 active_menu = self.config_menu
             else:
                 active_menu = self.menu
+            if not active_menu:
+                raise MazeConfigException("Menu not exist for Menu Manager")
             self.print_menu(active_menu)
             try:
                 self._handle_input(active_menu)
@@ -123,13 +128,20 @@ class MenuManager:
         move_cursor(row + 1, 1)
 
     def print_menu(self, active_menu: Menu) -> None:
+        theme = self.render.theme_char
+        corner_br = theme["corner"][0b0110]
+        corner_bl = theme["corner"][0b1010]
+        corner_ur = theme["corner"][0b0011]
+        corner_ul = theme["corner"][0b1001]
+        wall_n = cast(str, theme["wall_n"])
+        wall_w = cast(str, theme["wall_w"])
         chars = [
-            self.render.theme_char["corner"][0b0110],
-            self.render.theme_char["corner"][0b1100],
-            self.render.theme_char["corner"][0b0011],
-            self.render.theme_char["corner"][0b1001],
-            self.render.theme_char["wall_n"],
-            self.render.theme_char["wall_w"],
+            corner_br,
+            corner_bl,
+            corner_ur,
+            corner_ul,
+            wall_n,
+            wall_w,
         ]
         if self.color:
             print_menu_ansi(active_menu, chars, self.render.theme_color)
@@ -323,64 +335,66 @@ class MenuManager:
         self._cursor_after_maze()
         regenerate = True
         redirect_coords = False
-        if name in ("perfect", "pretty", "animated", "color"):
-            self._cursor_after_maze()
-            clear_from_cursor()
-            new_value = read_boolean_key()
-            if (
-                name == "perfect" and not new_value
-            ) or name in ("pretty", "color"):
-                regenerate = False
-        else:
-            try:
-                if name in ("width", "height", "seed", "delay", "cell_size"):
-                    raw_value = self.print_edit_config_input(name)
-                    new_value = int(raw_value)
-                    if name in ("width", "height"):
-                        redirect_coords = True
-                    else:
-                        regenerate = False
-                elif name in ("entry", "exit"):
-                    raw_value = self.print_edit_config_input(name)
-                    new_value = str_to_coords(raw_value)
-                    if self.generator.maze.get_cell(
-                        new_value[0], new_value[1]
-                    ).blocked:
-                        raise ValueError(
-                            f"The coordinate used {new_value} is blocked"
-                        )
-                elif name in ("config_file", "output_file"):
-                    new_value = self.print_edit_config_input(name)
+        new_value: Any = None
+        try:
+            if name in ("perfect", "pretty", "animated", "color"):
+                self._cursor_after_maze()
+                clear_from_cursor()
+                new_value = read_boolean_key()
+                if (
+                    name == "perfect" and not new_value
+                ) or name in ("pretty", "color"):
                     regenerate = False
-                elif name == "algorithm":
-                    self._cursor_after_maze()
-                    clear_from_cursor()
-                    new_value = read_algorithm_key()
-                elif name == "solution_algorithm":
-                    self._cursor_after_maze()
-                    clear_from_cursor()
-                    new_value = read_sol_algorithm_key()
-                elif name == "theme_char":
-                    self._cursor_after_maze()
-                    clear_from_cursor()
-                    new_value = read_theme_char_key()
-                    self.render.theme_char = get_theme_chars(new_value)
-                elif name == "theme_color":
-                    self._cursor_after_maze()
-                    clear_from_cursor()
-                    new_value = read_theme_color_key()
-                    self.render.theme_color = get_theme_colors(new_value)
-            except ValueError as exc:
-                msg = (
-                    "Error, inserted invalid value for maze attribute "
-                    f"'{name}': {new_value}"
-                )
-                print(msg, file=sys.stderr)
-                print(
-                    f"Raised the following exception: {exc}",
-                    file=sys.stderr,
-                )
+            elif name in ("width", "height", "seed", "delay", "cell_size"):
+                raw_value = self.print_edit_config_input(name)
+                new_value = int(raw_value)
+                if name in ("width", "height"):
+                    redirect_coords = True
+                else:
+                    regenerate = False
+            elif name in ("entry", "exit"):
+                raw_value = self.print_edit_config_input(name)
+                new_value = str_to_coords(raw_value)
+                if not (self.generator.maze):
+                    raise ValueError("Maze of Maze Generator is None.")
+                if self.generator.maze.get_cell(
+                    new_value[0], new_value[1]
+                ).blocked:
+                    raise ValueError(
+                        f"The coordinate used {new_value} is blocked"
+                    )
+            elif name in ("config_file", "output_file"):
+                new_value = self.print_edit_config_input(name)
                 regenerate = False
+            elif name == "algorithm":
+                self._cursor_after_maze()
+                clear_from_cursor()
+                new_value = read_algorithm_key()
+            elif name == "solution_algorithm":
+                self._cursor_after_maze()
+                clear_from_cursor()
+                new_value = read_sol_algorithm_key()
+            elif name == "theme_char":
+                self._cursor_after_maze()
+                clear_from_cursor()
+                new_value = read_theme_char_key()
+                self.render.theme_char = get_theme_chars(new_value)
+            elif name == "theme_color":
+                self._cursor_after_maze()
+                clear_from_cursor()
+                new_value = read_theme_color_key()
+                self.render.theme_color = get_theme_colors(new_value)
+        except ValueError as exc:
+            msg = (
+                "Error, inserted invalid value for maze attribute "
+                f"'{name}': {new_value}"
+            )
+            print(msg, file=sys.stderr)
+            print(
+                f"Raised the following exception: {exc}",
+                file=sys.stderr,
+            )
+            regenerate = False
 
         # Update all fields shared between config and generator.
         # Then, create a new render re-initialized with the new maze.
@@ -465,6 +479,8 @@ class MenuManager:
         )
         if name == "perfect":
             if not self.maze_config.perfect:
+                if not (self.generator.maze):
+                    raise ValueError("Maze of Maze Generator is None.")
                 self.generator.make_imperfect(self.generator.maze)
         elif name == "color":
             self.render.color = self.maze_config.color

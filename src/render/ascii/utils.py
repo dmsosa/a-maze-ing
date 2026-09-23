@@ -3,6 +3,14 @@ import platform
 import sys
 import time
 
+from constants import BOLD, \
+    GREEN, \
+    MAIN_INSTRUCTION, \
+    RESET, \
+    SUBTITLE, \
+    TITLE, \
+    YELLOW
+
 
 def clear_screen(is_ansi: bool) -> None:
     """Call this ONCE, before the animation loop starts."""
@@ -37,11 +45,11 @@ def move_cursor(row: int, col: int) -> None:
     sys.stdout.write(f"\033[{row};{col}H")
 
 
-def move_cursor_right(columns) -> None:
+def move_cursor_right(columns: int) -> None:
     sys.stdout.write(f"\033[{columns}C")
 
 
-def move_cursor_up(rows) -> None:
+def move_cursor_up(rows: int) -> None:
     sys.stdout.write(f"\033[{rows}A")
 
 
@@ -71,14 +79,14 @@ HIDE_CURSOR = "\033[?25l"
 SHOW_CURSOR = "\033[?25h"
 
 
-def print_line(s, delay=0.05) -> None:
+def print_line(s: str, delay: float = 0.05) -> None:
     for ch in s:
         sys.stdout.write(ch)
         sys.stdout.flush()
         time.sleep(delay)
 
 
-def erase_line(s) -> None:
+def erase_line(s: str) -> None:
     sys.stdout.write("\r" + " " * len(s) + "\r")
     sys.stdout.flush()
 

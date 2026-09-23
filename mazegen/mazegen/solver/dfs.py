@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from ..model.maze_generator import Maze
+    from ..model.maze import Maze
 
 
 class DFSSolutionStrategy(MazeSolutionStrategy):
