@@ -14,6 +14,7 @@ class MazeRenderer(ABC):
     show_solution: bool
     fly_mode: bool
     solution_set: set[tuple[int, int]] = set()
+    coin_set: set[tuple[int, int]] = set()
     theme_char: ThemeChar
     theme_color: dict[str, str]
     player_pos: tuple[int, int] | None = None
@@ -35,7 +36,7 @@ class MazeRenderer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update_context(self, **kwargs: Any) -> None:
+    def set_solution_set(self, solution_set: set[tuple[int, int]]) -> None:
         raise NotImplementedError
 
     @abstractmethod

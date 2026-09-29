@@ -1,7 +1,8 @@
 # src/player/menu_manager.py
 from enum import Enum, auto
 import sys
-from typing import Any, cast
+import traceback
+from typing import Any
 
 from mazegen import MazeGenerator
 from pydantic import ValidationError
@@ -121,6 +122,7 @@ class MenuManager:
                     f"'{self.menu.name}':\n{exc}"
                 )
                 print(message, file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
                 continue
 
     def _cursor_after_maze(self) -> None:
@@ -128,25 +130,17 @@ class MenuManager:
         move_cursor(row + 1, 1)
 
     def print_menu(self, active_menu: Menu) -> None:
-        theme = self.render.theme_char
-        corner_br = theme["corner"][0b0110]
-        corner_bl = theme["corner"][0b1010]
-        corner_ur = theme["corner"][0b0011]
-        corner_ul = theme["corner"][0b1001]
-        wall_n = cast(str, theme["wall_n"])
-        wall_w = cast(str, theme["wall_w"])
-        chars = [
-            corner_br,
-            corner_bl,
-            corner_ur,
-            corner_ul,
-            wall_n,
-            wall_w,
-        ]
         if self.color:
-            print_menu_ansi(active_menu, chars, self.render.theme_color)
+            print_menu_ansi(
+                active_menu,
+                self.render.theme_char,
+                self.render.theme_color
+                )
         else:
-            print_menu_ascii(active_menu, chars)
+            print_menu_ascii(
+                active_menu,
+                self.render.theme_char
+                )
 
     def quit(self) -> None:
         self.game_over = True
@@ -184,10 +178,6 @@ class MenuManager:
 
     def show_solution(self) -> None:
         self.render.show_solution = not self.render.show_solution
-        clear_screen(self.color)
-        self.render.print_grid()
-
-    def clear_print(self) -> None:
         clear_screen(self.color)
         self.render.print_grid()
 
@@ -231,6 +221,12 @@ class MenuManager:
                         "Output file",
                         {"O", "o"},
                         lambda: self.edit_config("output_file"),
+                    ),
+                    MenuItem(
+                        "M",
+                        "Animated",
+                        {"M", "m"},
+                        lambda: self.edit_config("animated"),
                     ),
                     MenuItem(
                         "E",
@@ -307,7 +303,8 @@ class MenuManager:
         )
         self.generator.on(
             "maze_solution",
-            lambda **kwargs: self.render.update_context(**kwargs),
+            lambda **kwargs:
+            self.render.set_solution_set(kwargs.get("solution_coords", ()))
         )
         self.generator.seed = (self.generator.seed or 0) + 1
         self.render.solution_set = set()
@@ -470,12 +467,13 @@ class MenuManager:
                 ),
             )
         self.generator.on(
-            "completed",
-            lambda **kwargs: self.render.render_clean_up(),
+            "maze_solution",
+            lambda **kwargs:
+            self.render.set_solution_set(kwargs.get("solution_coords", ()))
         )
         self.generator.on(
-            "maze_solution",
-            lambda **kwargs: self.render.update_context(**kwargs),
+            "maze_completed",
+            lambda **kwargs: self.render.render_clean_up(),
         )
         if name == "perfect":
             if not self.maze_config.perfect:
@@ -489,6 +487,8 @@ class MenuManager:
             self.render.set_frame_delay(self.maze_config.delay)
         elif name == "cell_size":
             self.render.set_cell_size(self.maze_config.cell_size)
+        elif name == "entry":
+            self.render.player_pos = self.maze_config.entry
 
     def _close_config_menu(self, regenerate: bool = False) -> None:
         self.state = MenuState.MENU

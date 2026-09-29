@@ -91,7 +91,7 @@ def main() -> None:
         maze_generator.on(
             "maze_solution",
             lambda **kwargs:
-            render.update_context(**kwargs)
+            render.set_solution_set(kwargs.get("solution_coords", ()))
         )
         clear_screen(is_ansi)
         if maze_config.pretty:

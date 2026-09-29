@@ -1,5 +1,5 @@
 # src/player/menu.py
-from typing import Any, Callable
+from typing import Any, Callable, cast
 from render.ascii.utils import hex_to_ansi_fg
 
 
@@ -44,9 +44,6 @@ class Menu:
 
     def selected_item(self) -> MenuItem:
         return self.items[self.selected_index]
-
-    def labels(self) -> list[str]:
-        return [item.label for item in self.items]
 
 
 def print_menu_lines_ascii(
@@ -143,10 +140,18 @@ def print_menu_lines_ansi(
 
 def print_menu_ascii(
         menu: Menu,
-        chars: list[str],
+        theme_char: dict[str, Any],
         mark: bool = True,
         scale: int = 3
         ) -> None:
+    chars = [
+        theme_char["corner"][0b0110],
+        theme_char["corner"][0b1100],
+        theme_char["corner"][0b0011],
+        theme_char["corner"][0b1001],
+        cast(str, theme_char["wall_n"]),
+        cast(str, theme_char["wall_w"]),
+    ]
     corner_ul = chars[0]
     corner_ur = chars[1]
     corner_bl = chars[2]
@@ -177,11 +182,19 @@ def print_menu_ascii(
 
 def print_menu_ansi(
         menu: Menu,
-        chars: list[str],
+        theme_char: dict[str, Any],
         theme_color: dict[str, str],
         mark: bool = True,
         scale: int = 3
         ) -> None:
+    chars = [
+        theme_char["corner"][0b0110],
+        theme_char["corner"][0b1100],
+        theme_char["corner"][0b0011],
+        theme_char["corner"][0b1001],
+        cast(str, theme_char["wall_n"]),
+        cast(str, theme_char["wall_w"]),
+    ]
     corner_ul = chars[0]
     corner_ur = chars[1]
     corner_bl = chars[2]

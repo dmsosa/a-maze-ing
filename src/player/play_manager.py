@@ -1,5 +1,4 @@
 # src/player/play_manager.py
-from enum import Enum, auto
 import sys
 from typing import cast
 from mazegen import MazeGenerator
@@ -11,23 +10,6 @@ from .menu import Menu, MenuItem,  print_menu_ansi, \
       print_menu_ascii, print_menu_lines_ansi, print_menu_lines_ascii
 from config import MazeConfiguration
 from render import MazeRenderer
-
-
-class PlayOption(Enum):
-    UP = auto()
-    DOWN = auto()
-    LEFT = auto()
-    RIGHT = auto()
-    JUMP = auto()
-    SOLUTION = auto()
-    QUIT = auto()
-
-
-class PlayDirection(Enum):
-    N = "N"
-    E = "E"
-    S = "S"
-    W = "W"
 
 
 class PlayManager:
@@ -188,25 +170,10 @@ class PlayManager:
         move_cursor(row + 3, 1)
 
     def print_menu(self, active_menu: Menu) -> None:
-        theme = self.render.theme_char
-        corner_br = theme["corner"][0b0110]
-        corner_bl = theme["corner"][0b1010]
-        corner_ur = theme["corner"][0b0011]
-        corner_ul = theme["corner"][0b1001]
-        wall_n = cast(str, theme["wall_n"])
-        wall_w = cast(str, theme["wall_w"])
-        chars = [
-            corner_br,
-            corner_bl,
-            corner_ur,
-            corner_ul,
-            wall_n,
-            wall_w,
-        ]
         if self.color:
             print_menu_ansi(
                 active_menu,
-                chars,
+                self.render.theme_char,
                 self.render.theme_color,
                 False,
                 self.render.cell_size
@@ -214,7 +181,7 @@ class PlayManager:
         else:
             print_menu_ascii(
                 active_menu,
-                chars,
+                self.render.theme_char,
                 False,
                 self.render.cell_size
                 )
@@ -287,4 +254,5 @@ class PlayManager:
     def generate_new_maze(self) -> None:
         self.generator.seed = (self.generator.seed or 0) + 1
         self.render.solution_set = set()
+        self.render.coin_set = set()
         self.generator.generate()

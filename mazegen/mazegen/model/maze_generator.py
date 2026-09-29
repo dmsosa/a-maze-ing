@@ -105,14 +105,14 @@ class MazeGenerator(EventEmitter):
         sol_strategy = get_solution_algorithm(self.solution_algorithm)
         solution_path, solution_coords = \
             sol_strategy.generate_solution(self.maze)
-        self.solution_path = solution_path
-        self.solution_coords = solution_coords
+        self.emit("maze_completed", maze=self.maze, info=None)
         self.emit(
             "maze_solution",
-            solution=solution_coords,
+            solution_coords=solution_coords,
             solution_path=solution_path,
             )
-        self.emit("maze_completed", maze=self.maze, info=None)
+        self.solution_path = solution_path
+        self.solution_coords = solution_coords
         return self.maze
 
     def _would_create_open_3x3(

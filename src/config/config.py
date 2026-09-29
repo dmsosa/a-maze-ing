@@ -297,22 +297,22 @@ class MazeConfiguration(BaseModel):
         for i, letter in enumerate(key):
             if not re.match(KEY_REGEXP, letter):
                 msg = "" \
-                    f"Invalid key '{key}'," \
+                    f"Invalid key '{key}'" \
                     " contains non alphabetic character," \
-                    f" must one of the following: {allowed_keys}" \
+                    f" must be one of the following: {allowed_keys}" \
                     ""
                 return (msg, int(i))
             if key != key.upper():
                 msg = "" \
-                    "Invalid key, " \
+                    f"Invalid key '{key}'" \
                     " must be written in uppercase: " \
                     f"{key}" \
                     ""
                 return (msg, 1)
             if not (key.upper() in allowed_keys):
                 msg = "" \
-                    "Invalid key, " \
-                    ", must one of the following: " \
+                    f"Invalid key '{key}'" \
+                    " must be one of the following: " \
                     f"{allowed_keys}" \
                     ""
                 return (msg, 1)

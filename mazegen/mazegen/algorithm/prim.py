@@ -98,6 +98,3 @@ class PrimAlgorithm(MazeAlgorithmStrategy):
                 "frontier_set": frontier_set,
             }
             self._maybe_emit(maze=maze, info=info)
-
-    def show(self) -> str:
-        return self.name

@@ -231,10 +231,10 @@ RENDER_THEMES_COLORS: dict[str, dict[str, str]] = {
         "bg": "#0b132b",
         "wall":       "#3a506b",
         "current":  "#dff9fb",
-        "entry":      "#a3cef1",
+        "entry":      "#708ea7",
         "exit_":       "#ff595e",
-        "way":        "#5bc0be",
-        "blocked":    "#1b262c",
+        "way":        "#9DB3B1",
+        "blocked":    "#256e96",
     },
     "pastel": {
         "bg":      "#faf5ff",

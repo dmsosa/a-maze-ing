@@ -9,7 +9,7 @@ def random_coord(
     width: int,
     height: int,
 ) -> tuple[int, int]:
-    return (random.randint(0, width), random.randint(0, height))
+    return (random.randint(0, width - 1), random.randint(0, height - 1))
 
 
 def valid_coord(coord: tuple[int, int], w: int, h: int) -> bool:

@@ -6,7 +6,7 @@ import tty
 import termios
 
 from mazegen import MazeAlgorithm
-from mazegen.model.constants import SolutionAlgorithm
+from mazegen import SolutionAlgorithm
 from render.ascii.constants import RENDER_THEMES_CHARS, RENDER_THEMES_COLORS
 from render.ascii.utils import move_cursor_up
 
@@ -16,20 +16,6 @@ class MenuKey(Enum):
     DOWN = auto()
     SELECT = auto()
     EXIT = auto()
-
-
-class PlayMenuKey(Enum):
-    EDIT_CONFIG = "edit_config"
-    NEW_MAZE = "new_maze"
-    PLAY = "play"
-    PERFECT = "perfect"
-
-
-class ConfigMenuKey(Enum):
-    WIDTH = "width"
-    HEIGHT = "height"
-    PERFECT = "perfect"
-    ALGORITHM = "algorithm"
 
 
 _ARROW_UP = {"\x1b[A", "W", "w"}     # POSIX escape seq / Windows scan code

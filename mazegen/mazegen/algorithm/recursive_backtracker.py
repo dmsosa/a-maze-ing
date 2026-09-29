@@ -77,6 +77,3 @@ class RBacktrackerAlgorithm(MazeAlgorithmStrategy):
 
             else:
                 break
-
-    def show(self) -> str:
-        return self.name
