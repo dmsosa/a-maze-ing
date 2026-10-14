@@ -1,5 +1,6 @@
 *This project has been created as part of the 42 curriculum by durisosa, and sasilves.*
 
+<img width="1670" height="1466" alt="demo" src="https://github.com/user-attachments/assets/446443f6-2de8-4b08-8aaf-c79d4446f8bb" />
 <img width="400" height="225" alt="demo" src="https://github.com/user-attachments/assets/3e64b165-b749-4451-bfb0-8dd3f1199db3" />
 
 # 🧩 A-Maze-Ing
