@@ -1,4 +1,6 @@
-*This project has been created as part of the 42 curriculum by dmsosa, durisosa, and sasilves.*
+*This project has been created as part of the 42 curriculum by durisosa, and sasilves.*
+
+<img width="400" height="225" alt="demo" src="https://github.com/user-attachments/assets/3e64b165-b749-4451-bfb0-8dd3f1199db3" />
 
 # 🧩 A-Maze-Ing
 
