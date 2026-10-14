@@ -1,15 +1,14 @@
 # src/player/play_manager.py
 import sys
 from typing import cast
-from mazegen import MazeGenerator
-from player.constants import USERNAME_REGEXP
-from player.utils import print_exit_play
-from render.ascii.utils import clear_from_cursor, clear_screen, move_cursor
+from mazegen import MazeGenerator, MazeConfiguration
+from .constants import USERNAME_REGEXP
+from .utils import print_exit_play
+from ..render.ascii.utils import clear_from_cursor, clear_screen, move_cursor
 from .keys import get_key
 from .menu import Menu, MenuItem,  print_menu_ansi, \
       print_menu_ascii, print_menu_lines_ansi, print_menu_lines_ascii
-from config import MazeConfiguration
-from render import MazeRenderer
+from ..render import MazeRenderer
 
 
 class PlayManager:
@@ -80,12 +79,6 @@ class PlayManager:
                             "Show solution",
                             {"O", "o"},
                             lambda: self.show_solution()
-                            ),
-                        MenuItem(
-                            "Enter",
-                            "Jump",
-                            {"\r", "\n", "J"},
-                            lambda: self.enter_fly_mode()
                             ),
                         MenuItem(
                             "Q",

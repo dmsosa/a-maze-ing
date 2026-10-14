@@ -1,258 +1,366 @@
-# Developer's Forewords:
+*This project has been created as part of the 42 curriculum by durisosa, sasilves.*
 
-In computer science, maze generation is more than just fun: it’s a practical
-application of algorithms, randomness, and graph theory. Some famous algorithms used
-for maze generation, like Prim’s, Kruskal’s, or the recursive backtracker, are also used in
-real-world problems like network design or procedural content generation. Interestingly,
-perfect mazes (with one unique path between any two points) are directly related to
-spanning trees in graph theory. Building a maze, especially one you can visualize and
-share, is a great way to explore how computers can create structure from chaos, and have
-a bit of fun while doing it.
-“A labyrinth is not a place to be lost, but a path to be found.”
+# A-Maze-Ing
 
-# Learning path
+## Description
 
-# Packaging a Python project
+A-Maze-Ing is a Python maze generator, solver, visualizer, and small terminal game.
+The program reads a configuration file, generates a maze, solves it, displays it in the terminal, and exports it using the hexadecimal wall format required by the project.
 
-The directory containing the Python files should match the project name. This simplifies the configuration and is more obvious to users who install the package.
+The project is divided into two main parts:
 
-Creating the file __init__.py is recommended because the existence of an __init__.py file allows users to import the directory as a regular package, even if (as is the case in this tutorial) __init__.py is empty. [1]
+- `mazegen/`: reusable package containing the maze model, generation algorithms, solving algorithms, `42` pattern, imperfect-maze logic, and export logic.
+- `src/`: application layer containing configuration parsing, terminal rendering, menus, input handling, and play mode.
 
+Main features:
 
-Starting a mazze ing
+- Perfect and imperfect maze generation.
+- Reproducible generation using a seed.
+- Centered `42` pattern built with blocked cells when the maze is large enough.
+- Three generation algorithms: Hunt-and-Kill, Recursive Backtracker, and Randomized Prim.
+- Three solving algorithms: BFS, DFS, and A*.
+- ASCII/Unicode terminal rendering with optional colors and animation.
+- Interactive menu to regenerate the maze, edit configuration, and show/hide the solution.
+- Playable mode using keyboard movement.
+- Hexadecimal export containing the maze, entry, exit, and solution path.
+- Reusable `mazegen` Python package.
 
-the first question is the algorithm I am going to choose, for that, I am going to use the DFS algorithm but with the Hunt and kill variant which avoids using recursion.
+## Program flow
 
-But, how to implement that algorithm with the parse part. Which classes I am going to create? for example, how can I process that config file. 
+The application follows this general flow:
 
-From the config.txt, the main goal is to take out variables out of that, how can I read that file?
+```text
+config.txt
+    ↓
+MazeConfiguration
+    ↓
+MazeGenerator
+    ↓
+Maze + Generation Strategy
+    ↓
+Perfect / Imperfect processing
+    ↓
+Solution Strategy
+    ↓
+Renderer / Interactive Menu
+    ↓
+output.txt
+```
+
+Configuration parsing is kept outside the reusable `mazegen` package. The package is responsible for the maze structure, algorithms, solving, pattern, and export, while the application layer handles user interaction and visualization.
+
+## Instructions
 
-If you pass me the file as a command line argument, I can open it, otherwise, I am going to look for a config.txt file, in which case if not found, I throw an exception
+### Requirements
 
-but, how I am going to manae the dependdencies of my project, should I use a requirements.txt or a poetry, ?
+- Python 3.10 or newer.
+- Poetry.
+- `make`.
+- A terminal compatible with the keyboard controls used by the interactive mode.
 
-# The flow of the program:
+### Installation
 
-My first idea is: I receive a config.txt file, 
-whicih is going to be parsed by MazeConfiguration class in order to create a MazeConfiguration object via its init method. After parsing it I can initialize my MazeGenerator class using the properties that my maze_config has.
+From the repository root:
 
-My main function is where? it is going to be in the a_maze_ing.py file. Which checks how many arguments you pass me, tries to find config.txt if not found, and throw error if no file was found.
+```bash
+make install
+```
 
-The first challenge: read 
-https://medium.com/@msgold/using-python-to-create-and-solve-mazes-672285723c96
+This builds the local `mazegen` package and installs the project dependencies with Poetry.
 
-and develop a program that starts at cell Entry, access a random neighbour and print its coordinates, recursively.
+### Run
 
-you are allowed to pass the subject AI to explain it in other words
+Using the default `config.txt`:
 
-write pyttest for unit testing
+```bash
+poetry run make run
+```
 
-Your program must handle all errors gracefully: invalid configuration, file not found, bad
-syntax, impossible maze parameters, etc. It must never crash unexpectedly, and must
-always provide a clear error message to the user.
+Using another configuration file:
 
-this stuff is going to implement the Eller's Agorithm to generate the maze.
-then, we take care of printing the maze itself.
+```bash
+poetry run python3 a_maze_ing.py my_config.txt
+```
 
+If no configuration file is supplied, the application creates and uses an internal default configuration instead of crashing.
 
-For me, it makes sense to create a pre Configuration class? It may allow me to create a Maze rather than dealing with config error identifications inside the Maze class itself, and then the Maze Generator class creation can be pretty straightforward.
+### Other Makefile commands
 
-#  Render part
-Key Characters for ASCII Mazes
-Common characters used to represent maze elements include:
+```bash
+make debug
+make lint
+make lint-strict
+make clean
+```
 
-Walls: #, █, ■
-Paths: , ., .
-Start/End: S, E, *
-Corners: +, ┌, ┐, └, ┘ 
+- `debug`: runs the program and redirects errors to `log.txt`.
+- `lint`: runs `flake8` and `mypy`.
+- `lint-strict`: also runs `mypy --strict`.
+- `clean`: removes caches and generated build files.
 
+## Configuration file
 
-# Resources
+The configuration file uses one uppercase `KEY=VALUE` pair per line.
+Lines beginning with `#` are comments. Duplicate or invalid keys are rejected, while missing options are completed with their default values.
 
-Python Packaging User Guide: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+Example:
 
-Printing mazes with Ascii
+```text
+WIDTH=20
+HEIGHT=15
+ENTRY=0,0
+EXIT=19,14
+ALGORITHM=PRIM
+SOLUTION_ALGORITHM=astar
+SEED=42
+OUTPUT_FILE=output.txt
+PERFECT=true
+RENDER_MODE=ascii
+DELAY=0.0025
+COLOR=true
+ANIMATED=false
+```
 
-https://codereview.stackexchange.com/questions/263517/more-efficient-way-to-create-an-ascii-maze-using-box-characters
+### Core options
 
-Print a maze using only two characters
-https://stackoverflow.com/questions/55452329/print-a-maze-using-only-two-characters
+| Key | Description | Example |
+| --- | --- | --- |
+| `WIDTH` | Maze width in cells. Valid application range: 5-250. | `WIDTH=20` |
+| `HEIGHT` | Maze height in cells. Valid application range: 5-250. | `HEIGHT=15` |
+| `ENTRY` | Entry coordinate as `x,y`. | `ENTRY=0,0` |
+| `EXIT` | Exit coordinate as `x,y`. | `EXIT=19,14` |
+| `OUTPUT_FILE` | File used for maze export. | `OUTPUT_FILE=output.txt` |
+| `PERFECT` | Enables or disables imperfect-maze processing. | `PERFECT=false` |
 
-# ToDo
+### Additional options
 
-Move config logic outside mazegen package
-Add santi to authors
-Mazegen needs to be built first.
-Makefile debug rule.
-Makefile test to run tests
+| Key | Values | Default |
+| --- | --- | --- |
+| `ALGORITHM` | `HUNT_AND_KILL`, `DFS`, `PRIM` | `PRIM` |
+| `SOLUTION_ALGORITHM` | `bfs`, `dfs`, `astar` | `astar` |
+| `SEED` | Non-negative integer | `0` |
+| `RENDER_MODE` | `ascii`, `mlx` | `ascii` |
+| `ANIMATED` | Boolean | `true` |
+| `COLOR` | Boolean | `false` |
+| `DELAY` | Animation delay in seconds | `0.0025` |
+| `PRETTY` | Boolean presentation messages | `false` |
 
+Invalid entry or exit coordinates are redirected to valid positions. If entry and exit are equal, the exit is redirected to the bottom-right cell. In the current version, both `ascii` and `mlx` configuration values are handled by the terminal renderer.
 
-# Rendering the maze 
-Create maze renderer with ascii characters only
-If I decide to take into account both 4 sides, I need to have 
+## Maze representation
 
-.=.=======.
-| |       |
-|     .=. |
-|     | | |
-.=====| 
-|     
-.=========.
+The maze is represented as a grid of `Cell` objects. Each cell stores its coordinates, blocked state, and four walls: North, East, South, and West.
 
-**********
-|  |  *     *
-└──┘  *  *
-*E *  *  *
-* S*  *  *
-*     *  *
-**********
-
-
-// Source - https://codereview.stackexchange.com/a/263520
-// Posted by Olivier Jacot-Descombes, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-09-05, License - CC BY-SA 4.0
-
-char[] walls = {
-//   0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
-    '*', '─', '│', '┌', '│', '└', '│', '├', '─', '─', '┐', '┬', '┘', '┴', '┤', '┼' 
-};
-
-int index = (curNorth ? 1 : 0) + 
-            (curWest ? 2 : 0) + 
-            (nextEast ? 4 : 0) + 
-            (nextSouth ? 8 : 0);
-char corner = walls[index];
+Opening a passage is always performed through `Maze.remove_wall()`, which updates both adjacent cells. This keeps the maze representation coherent and prevents one-sided walls.
 
-
+Generation and solving algorithms interact with the maze through its public methods rather than modifying the internal matrix directly.
 
-[┌][─][┐]
-[|][*][|]
-[└][─][┘]
-[┌][─][┐]
-[|][*][|]
-[└][─][┘]
-[┌][─][┐]
-[|][*][|]
-[└][─][┘]
-[┌][─][┐]
-[|][*][|]
-[└][─][┘]
-[┌][─][┐]
-[|][*][|]
-[└][─][┘]
-[┌][─][┐]
-[|][*][|]
-[└][─][┘]
+## Maze generation
 
-then displays the grid once is built is easy
-for y in height
-    i = 0
-    for x in width
-        j = 0
-        while j < cellSize
-            row += grid[y*i][x+j]
-            i++
-            j++
+Three generation strategies are available.
 
-For box-drawing characters (─ │ ┌ ┐ ┬ ┼ etc.) instead, see the related Code Review thread, which uses a 4-bit lookup table to pick the correct corner/junction character.
+| Algorithm | Description |
+| --- | --- |
+| `HUNT_AND_KILL` | Performs a random walk through unvisited cells and then searches for a new unvisited cell connected to the visited region. |
+| `DFS` | Recursive Backtracker implemented iteratively with a stack. It explores deeply and backtracks when no unvisited neighbor remains. |
+| `PRIM` | Randomized Prim algorithm. It grows the maze by repeatedly selecting cells from a frontier. |
 
-maybe I need to take care of the four corners?
-or only one corner.
+All strategies operate on the same `Maze` interface and ignore cells blocked by the `42` pattern.
 
-# EventEmitter pattern:
+### Perfect maze
 
+With `PERFECT=true`, the selected generation algorithm creates the maze without adding extra connections afterwards. The accessible maze remains tree-like, providing one unique route between connected cells.
 
-Good call, actually — decoupling the renderer from Cell/Direction/Maze internals and pinning it to one stable contract (list[str] of hex rows) means you could swap MazeGenerator's internal cell representation entirely later without touching the renderer at all. Since Maze.digits is already a @property computed fresh from cells each time, emitting it on every "cell_updated" event costs you nothing extra architecturally — it's just generator.digits read at call time, no new generator method needed.
+### Imperfect maze
 
+With `PERFECT=false`, the generator first creates the base maze and then opens additional safe walls.
 
-# Exception Handling
+The imperfect-maze logic is designed to:
 
-Why this works
-Signal	What happens	Where it's caught
-Ctrl+C during input()	input() raises KeyboardInterrupt	Inner try/except
-Ctrl+C during processing	Propagates up	Outer try/except
-Ctrl+D during input()	input() raises EOFError	Inner try/except
-Piped input ends (e.g. cat file | python3 prog.py)	Also EOFError	Same place
+- create at least two loops;
+- reduce dead ends to at most two when possible under the project constraints;
+- make the four corners and the maze center traversable as corridors;
+- reject openings that would create a completely open `3x3` area;
+- never open a passage through a blocked `42` cell.
 
-Key practices
-Catch KeyboardInterrupt and EOFError together around input() — they both mean "stop reading."
-Use exit code 130 for Ctrl+C (128 + SIGINT(2)), 0 for clean exit, 1 for errors. This is the Unix convention.
-Don't catch KeyboardInterrupt silently — at minimum print a message so the user knows the program didn't crash.
-Keep the outer try/except as a safety net for interrupts that fire between prompts (during your processing logic).
-Avoid signal.signal for simple input programs — the try/except approach is simpler and handles the common case perfectly. Reserve the signal-flag pattern for long-running servers or multi-threaded apps where you need graceful shutdown of resources (DB pools, sockets, etc.).
-This two-layer try/except is the idiomatic, minimal solution for input-driven CLI programs.
+Because imperfect mode only removes walls from an already connected maze, adding these extra connections does not disconnect the existing maze.
 
-# To Do
+## The `42` pattern
 
-Handle uncomplete config.txt file, by providing default values, what else could I do to handle missing configuration?
-could be cool to indicate the user which fields are missing, and then informing that we are using default values.
+The project contains a fixed `42` pattern represented by blocked cells.
 
+The pattern is centered automatically when the maze is large enough. With its one-cell margin, it requires a maze of at least `9x7` cells.
 
-    I NEED TO MAKE THE CONFIG ABLE TO RECEIVE CONFIG FILE NAMES WITHOUT BEING LOWERCASE. 
-    ALSO, I WANT TO MAKE THE INTERACTIVE MENU, OPTIONS ARE 
-    CHANGE CONFIGURATION , SHOWS CURRENT CONFIG OBJECT AND ALLOWS TO CHANGE THEIR VALUES 
-    3. GENERATE NEW MAZE 
-    2. SHOW AND HIDE SOLUTION , CHANGE THEME 
-    1. FOR INT FIELDS, CHECK IF THEY ARE ALSO NOT BOOLENS 
-    5. I NEED TO handle permission errors and errors related to file management 
-    Add number of stepts that the maze make,
-    put a chronometer
-    put the number of steps made by the user
+Blocked cells cannot be entered by generation algorithms and their walls cannot be opened. If entry or exit would fall inside the pattern, they are redirected to safe corner positions before generation continues.
 
-    // 14 sept
-    as for today, the program depends on play manager while loop, now, it can provide an option for navigating through functions, it has the function edit maze configuration, which is going to edit fields over the config object, initialize a new maze generator cleaning the previous one, and re generate the maze.
+## Solving algorithms
 
-    when the user presses enter, I need to move the cursor where the menu begins, print the configuration menu, how to pad the configuration menus to the same height?
+After generation, the configured solver finds a route from entry to exit.
 
-    while editing config, handle key up and down to be able to switch opitions, for that reason
+| Solver | Description |
+| --- | --- |
+| `bfs` | Breadth-First Search. Explores level by level and finds a shortest path in the unweighted maze. |
+| `dfs` | Depth-First Search. Explores one branch deeply and returns a valid path, which is not necessarily the shortest. |
+| `astar` | A* using Manhattan distance as its heuristic. It finds a shortest path while guiding exploration toward the exit. |
 
-    for that you use the Menu class for access rthe selected option, and when you press enter, you call a function
+The solution is stored as a string made of `N`, `E`, `S`, and `W` directions and as a set of solution coordinates used by the renderer.
 
-    IN OR
-    // 15 sept
-    as for today
-    the program needs to show the solution, once I ave the solution, i can show it  via the state mask array, but when I want the
+## Rendering and events
 
-    SHOWING THE SOLUTION:
-    WHERE: IN THE MAZE GENERATOR object
-    WHEN: when the boolean value render.show_solution is True, or whether my render receives an optional array of tuples that is the solution. 
-    WHERE the solution is? It is found by the MazeSolver class, which takes an entry, an exit, the representation in hexadecimal digits
-    then the array with solution is going to be provided by the maze generator ALWAYS receives
+Rendering is intentionally separated from maze generation.
 
+`MazeGenerator` exposes a small event system that allows the application to observe the generation process without coupling the algorithms to the renderer.
 
-    the program now renders a maze but I need to make it able to enter into a while loop after displaying an options menu.
+The main events are:
 
-    SO, NOW THAT THE SOLUTIONS EXIST, CAN I CHANGE THE PASSING INFO AROUND TO BE ABLE TO JUST UPDATE THE RENDER DETAILS IN THE EVENT THAT IS BEING EMITTED,
+- `cell_updated`: emitted while generation or imperfect-maze processing changes the maze;
+- `maze_completed`: emitted after generation is complete;
+- `maze_solution`: emitted when the solution path has been calculated.
 
+When animation is enabled, the renderer reacts to `cell_updated`. Otherwise, it renders the completed maze only once.
 
+This separation allows the internal generation algorithms to remain reusable independently of the terminal interface.
 
-    IF NOT, CAN I JUST GRAB SOLUTIONS FROM THE INFO? LETS TRY
-    THAT event is going to be fired from the solver. I want to get the solution once I discover it and save it for later, so that it can be printed only by setting the show_solution flag to true, and making the play_manager to re render it.
+## Interactive menu
 
+After generation, the application enters an interactive menu.
 
+| Key | Action |
+| --- | --- |
+| `O` | Show or hide the solution. |
+| `E` | Edit the current maze configuration. |
+| `G` | Generate a new maze. |
+| `P` | Enter play mode. |
+| `Q` | Export the maze and quit. |
 
+The configuration menu can modify dimensions, generation and solution algorithms, perfect mode, entry and exit, animation, color, delay, seed, output file, and display theme options.
 
-    Now, how the play manager is going to display a good menu? lest ask claude code.
+### Play mode
 
-    It should be like
+The generated maze can also be played directly from the terminal.
 
-    for item in menu.items.
-    print [index item.key] - label
-    if key == item.key call play_manager._generate_new_maze() 
+The player starts from the configured entry and moves through open passages using `W`, `A`, `S`, `D` or the arrow keys. The solution can be toggled while playing, and reaching the exit generates a new maze and increases the game score.
 
-    # BONUS
-    add benchmark to the maze as it is being generated, which comes above the menu
+## Error handling
 
+The application validates both configuration syntax and configuration values before generating the maze.
 
-    REDIRECT EXIT TO WIDHT -1 HEIGHT -1
-    FIX THE MENU IN ASCII MODE
-    PRINT EXIT AND ENTRY ALWAYS
-    LET THE MAZE DO NOT OVERRIDE SOLUTION OVER PLAY, ENTRY AND EXIT
-    
-    need to block boolean to change width and height 
-    need to provide a way to change theme chars and colors 
+It handles errors such as:
 
-    need to make it playable 
-    
-    reduce limits to height and width
+- missing or unreadable configuration files;
+- invalid `KEY=VALUE` syntax;
+- duplicated or unknown configuration keys;
+- invalid dimensions or coordinates;
+- invalid enum or boolean values;
+- invalid output file names;
+- renderer errors;
+- `Ctrl+C` and `Ctrl+D` during interactive use.
 
+Known configuration problems are reported with a clear error message instead of allowing the program to fail silently.
+
+## Output format
+
+When the maze is exported, `OUTPUT_FILE` contains:
+
+```text
+<hexadecimal maze rows>
+
+<entry x,y>
+<exit x,y>
+<solution using N/E/S/W>
+```
+
+Example:
+
+```text
+9553
+8552
+c456
+
+0,0
+3,2
+EESSW
+```
+
+> **Solution export:** the solution written to `OUTPUT_FILE` is generated with the currently selected solution algorithm. When `DFS` is selected, the exported `N/E/S/W` path is the path found by the DFS solver.
+
+Each cell is represented by one hexadecimal digit. Closed walls use the following bit values:
+
+| Wall | Value |
+| --- | ---: |
+| North | `1` |
+| East | `2` |
+| South | `4` |
+| West | `8` |
+
+The values of the closed walls are added together. For example, hexadecimal `f` represents a cell with all four walls closed.
+
+## Reusable `mazegen` package
+
+The maze-generation logic is packaged separately from the terminal application and can be installed independently.
+
+```bash
+python3 -m pip install ./mazegen
+```
+
+Example:
+
+```python
+from mazegen import MazeGenerator, MazeAlgorithm, SolutionAlgorithm
+
+generator = MazeGenerator(
+    width=20,
+    height=15,
+    entry=(0, 0),
+    exit=(19, 14),
+    algorithm=MazeAlgorithm.PRIM,
+    solution_algorithm=SolutionAlgorithm.ASTAR,
+    seed=42,
+    perfect=True,
+    output_file="output.txt",
+)
+
+maze = generator.generate()
+
+generator.export_maze()
+print("\n".join(maze.hex_digits))
+print(generator.solution_path)
+```
+
+More details about the package architecture and public API are available in [`mazegen/README.md`](mazegen/README.md).
+
+## Project structure
+
+```text
+A-Maze-Ing/
+├── src/
+│   ├── config/          # configuration parsing and validation
+│   ├── exception/       # application exceptions
+│   ├── player/          # menus, keyboard handling and play mode
+│   ├── render/          # terminal rendering
+│   └── a_maze_ing.py    # application entry point
+├── mazegen/
+│   ├── mazegen/
+│   │   ├── algorithm/   # generation strategies
+│   │   ├── model/       # Cell, Maze and MazeGenerator
+│   │   ├── pattern/     # centered 42 pattern
+│   │   └── solver/      # BFS, DFS and A*
+│   └── pyproject.toml
+├── config.txt
+├── Makefile
+├── pyproject.toml
+└── README.md
+```
+
+## Resources
+
+The following references were used during development:
+
+- Python Packaging User Guide: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+- Python maze generation and solving example: https://medium.com/@msgold/using-python-to-create-and-solve-mazes-672285723c96
+- ASCII maze rendering discussion: https://codereview.stackexchange.com/questions/263517/more-efficient-way-to-create-an-ascii-maze-using-box-characters
+- Maze printing discussion: https://stackoverflow.com/questions/55452329/print-a-maze-using-only-two-characters
+
+## AI usage
+
+Artificial intelligence tools were used as support during the development process, mainly for research, debugging, and documentation.

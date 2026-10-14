@@ -2,6 +2,8 @@ from .model.maze_generator import MazeGenerator
 from .model.constants import MazeAlgorithm, SolutionAlgorithm
 from .model.cell import Direction, WALL_WEIGHTS
 from .model.maze import Maze
+from .config import MazeConfiguration
+from .exception import MazeConfigException
 
 __all__ = [
     "MazeGenerator",
@@ -10,4 +12,6 @@ __all__ = [
     "Direction",
     "WALL_WEIGHTS",
     "Maze",
+    "MazeConfiguration",
+    "MazeConfigException",
 ]

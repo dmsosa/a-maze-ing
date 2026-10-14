@@ -1,10 +1,15 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from render.ascii.constants import ThemeChar
+from .ascii.constants import ThemeChar
 
 if TYPE_CHECKING:
     from mazegen import Maze
+
+class RenderMode(Enum):
+    ASCII = "ascii"
+    MINILIBX = "mlx"
 
 
 class MazeRenderer(ABC):

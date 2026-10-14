@@ -19,7 +19,7 @@ install: build-mazegen
 run:
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
 		echo "\033[1;33mCorrect: VIRTUAL_ENV is set. Running program...\n\033[0m"; \
-		python3 ./src/$(NAME) $(CONFIG_FILE); \
+		python3 $(NAME) $(CONFIG_FILE); \
 	else \
 		echo "Error: VIRTUAL_ENV is not set. Please activate your virtual environment first."; \
 		echo "make install or poetry activate"; \
@@ -30,7 +30,7 @@ run:
 debug:
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
 		echo "\033[1;33mCorrect: VIRTUAL_ENV is set. Running program...\n\033[0m"; \
-		python3 ./src/$(NAME) $(CONFIG_FILE) 2>log.txt; \
+		python3 $(NAME) $(CONFIG_FILE) 2>log.txt; \
 	else \
 		echo "Error: VIRTUAL_ENV is not set. Please activate your virtual environment first."; \
 		echo "make install or poetry activate"; \

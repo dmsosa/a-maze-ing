@@ -91,7 +91,11 @@ class MazeGenerator(EventEmitter):
             )
 
         if self.maze.entry == self.maze.exit:
-            raise ValueError("Entry and exit cannot be the same cell")
+            self.maze.entry = (0, 0)
+            self.maze.exit = (
+                self.maze.width - 1,
+                self.maze.height - 1,
+            )
 
         self.maze.block_cells(self.blocked_positions)
         self.maze.set_blocked_cells(self.blocked_positions)

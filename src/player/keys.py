@@ -7,8 +7,8 @@ import termios
 
 from mazegen import MazeAlgorithm
 from mazegen import SolutionAlgorithm
-from render.ascii.constants import RENDER_THEMES_CHARS, RENDER_THEMES_COLORS
-from render.ascii.utils import move_cursor_up
+from ..render.ascii.constants import RENDER_THEMES_CHARS, RENDER_THEMES_COLORS
+from ..render.ascii.utils import clear_from_cursor, move_cursor_up
 
 
 class MenuKey(Enum):
@@ -100,7 +100,7 @@ def read_algorithm_key() -> MazeAlgorithm:
     while True:
         print("\r", flush=True)
         for i, algo in enumerate(values):
-            selected = " >> " if idx % values_len == i else ""
+            selected = " >> " if idx % values_len == i else "    "
             print(f"{selected}[{i + 0}]: {algo.name}")
         key = read_menu_key()
         if key is MenuKey.UP:
@@ -124,7 +124,7 @@ def read_sol_algorithm_key() -> SolutionAlgorithm:
     while True:
         print("\r", flush=True)
         for i, algo in enumerate(values):
-            selected = " >> " if idx % values_len == i else ""
+            selected = " >> " if idx % values_len == i else "    "
             print(f"{selected}[{i + 0}]: {algo.name}")
         key = read_menu_key()
         if key is MenuKey.UP:
@@ -137,6 +137,7 @@ def read_sol_algorithm_key() -> SolutionAlgorithm:
         if key is MenuKey.EXIT:
             break
         move_cursor_up(values_len + 1)
+        clear_from_cursor()
     msg = "Cancelled the select solution_algorithm operation"
     raise ValueError(msg)
 
@@ -148,7 +149,7 @@ def read_theme_char_key() -> str:
     while True:
         print("\r", flush=True)
         for i, value in enumerate(values):
-            selected = " >> " if idx % values_len == i else ""
+            selected = " >> " if idx % values_len == i else "    "
             print(f"{selected}[{i + 0}]: {value}")
         key = read_menu_key()
         if key is MenuKey.UP:
@@ -172,7 +173,7 @@ def read_theme_color_key() -> str:
     while True:
         print("\r", flush=True)
         for i, value in enumerate(values):
-            selected = " >> " if idx % values_len == i else ""
+            selected = " >> " if idx % values_len == i else "    "
             print(f"{selected}[{i + 0}]: {value}")
         key = read_menu_key()
         if key is MenuKey.UP:

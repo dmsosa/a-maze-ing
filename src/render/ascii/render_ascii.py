@@ -3,15 +3,15 @@ import sys
 from time import sleep
 from typing import Any, cast
 
-from exception.render_exception import RenderError
+from ...exception.render_exception import RenderError
 from mazegen import Maze
-from render.ascii.constants import (
+from .constants import (
     MOVE_DELTAS,
     RENDER_THEMES_CHARS,
     RENDER_THEMES_COLORS,
     ThemeChar,
 )
-from render.ascii.grid import has_wall, wall_go_to
+from .grid import has_wall, wall_go_to
 from .utils import (
     cursor_home,
     hex_to_ansi_bg,
@@ -69,8 +69,7 @@ class MazeRendererASCII(MazeRenderer):
         cursor_home()
         self.digits = maze.hex_digits
         self.entry = maze.entry
-        if self.player_pos is None:
-            self.player_pos = self.entry
+        self.player_pos = self.entry
         self.exit = maze.exit
         self.blocked_cells = maze.blocked_cells
         self.height = len(self.digits)
@@ -89,8 +88,6 @@ class MazeRendererASCII(MazeRenderer):
         self.context["current"] = info.get("current", None)
         self.context["hunt_pos"] = info.get("hunt_pos", None)
         self.context["visited"] = info.get("visited", ())
-        self.context["solution"] = info.get("solution", ())
-        self.context["solution_path"] = info.get("solution_path", "")
 
     def init_coins(self) -> None:
         coins_count = random.randint(
@@ -110,8 +107,6 @@ class MazeRendererASCII(MazeRenderer):
             "current": None,
             "hunt_pos": None,
             "visited": set(),
-            "solution": set(),
-            "solution_path": "",
         }
 
     def set_solution_set(self, solution_set: set[tuple[int, int]]) -> None:
@@ -132,8 +127,9 @@ class MazeRendererASCII(MazeRenderer):
                 "No maze to execute render clean_up function",
                 file=sys.stderr,
             )
+        self.context = self.default_render_context()
         self._cell_state_mask = self._build_cell_state_mask()
-        self.init_coins()
+        # self.init_coins()
         if self.color:
             self._print_grid_colorized()
         else:

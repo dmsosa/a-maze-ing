@@ -4,11 +4,11 @@ from functools import lru_cache
 import re
 import sys
 from typing import Any, Set, Tuple, cast
-from config.utils import DEFAULT_COORD, print_sleep, random_coord, valid_coord
-from constants import KEY_REGEXP, SNAKE_CASE_REGEXP
+from .utils import DEFAULT_COORD, print_sleep, valid_coord
+from .constants import KEY_REGEXP, SNAKE_CASE_REGEXP
 from mazegen import MazeAlgorithm, SolutionAlgorithm
 from pydantic import BaseModel, Field, model_validator
-from exception import raise_mc_error
+from ..exception import raise_mc_error
 
 
 class RenderMode(Enum):
@@ -17,8 +17,8 @@ class RenderMode(Enum):
 
 
 class MazeConfiguration(BaseModel):
-    width: int = Field(default=25, ge=1, le=500)
-    height: int = Field(default=25, ge=1, le=500)
+    width: int = Field(default=25, ge=5, le=250)
+    height: int = Field(default=25, ge=5, le=250)
     entry: Tuple[int, int] = Field(default=(0, 0))
     exit: Tuple[int, int] = Field(default=(0, 0))
     algorithm: MazeAlgorithm = MazeAlgorithm.PRIM
@@ -28,13 +28,9 @@ class MazeConfiguration(BaseModel):
                             default="output.txt",
                             pattern=SNAKE_CASE_REGEXP
                             )
-    config_file: str = Field(
-                            default="config_file.txt",
-                            pattern=SNAKE_CASE_REGEXP
-    )
     perfect: bool = True
     render_mode: RenderMode = RenderMode.ASCII
-    delay: float = Field(default=0.025, ge=0.0, le=30.0)
+    delay: float = Field(default=0.0025, ge=0.0, le=30.0)
     pretty: bool = False
     animated: bool = True
     color: bool = False
@@ -224,11 +220,14 @@ class MazeConfiguration(BaseModel):
                 "entry and exit are equal, redirecting" \
                 " the exit to a random coordinate within the maze:" \
                 ""
-            while config["entry"] == config["exit"]:
-                config["exit"] = random_coord(
-                    config["width"],
-                    config["height"]
-                    )
+            msg = "" \
+                "entry and exit are equal," \
+                " redirectig to the bottom and right-most cell: " \
+                ""
+            config["exit"] = (
+                    config["width"] - 1,
+                    config["height"] - 1
+                )
             msg += f"{config['exit']}"
             if verbose:
                 print_sleep(msg)

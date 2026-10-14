@@ -1,6 +1,6 @@
 # src/player/menu.py
 from typing import Any, Callable, cast
-from render.ascii.utils import hex_to_ansi_fg
+from ..render.ascii.utils import hex_to_ansi_fg
 
 
 MENU_WIDTH = 30

@@ -10,7 +10,7 @@ authors = [
 readme = "README.md"
 packages =[{ include = "*" }]
 license = "MIT"
-license-files = ["LICEN[CS]E.*"]
+license-files = ["LICEN[CS]E*"]
 keywords = ["egg", "bacon", "sausage", "tomatoes", "Lobster Thermidor"]
 requires-python = ">=3.10"
 

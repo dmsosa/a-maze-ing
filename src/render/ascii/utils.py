@@ -3,7 +3,7 @@ import platform
 import sys
 import time
 
-from constants import BOLD, \
+from ...constants import BOLD, \
     GREEN, \
     MAIN_INSTRUCTION, \
     RESET, \

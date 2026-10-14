@@ -1,7 +1,7 @@
 import re
 
 from pydantic import ValidationError
-from exception.config_exception import MazeConfigException
+from mazegen import MazeConfigException
 
 SNAKE_CASE_REGEXP = re.compile(r"^[a-zA-Z0-9]+(?:_[a-zA-Z0-9]+)*\.txt$")
 KEY_REGEXP = re.compile(r'^[A-Za-z_-]+$')

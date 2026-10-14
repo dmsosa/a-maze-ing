@@ -4,15 +4,13 @@ import sys
 import traceback
 from typing import Any
 
-from mazegen import MazeGenerator
+from mazegen import MazeGenerator, MazeConfiguration, MazeConfigException
 from pydantic import ValidationError
 
-from config import MazeConfiguration
-from exception.config_exception import MazeConfigException
-from player.utils import print_goodbye, print_line, str_to_coords
-from render import MazeRenderer
-from render.ascii import get_theme_chars, get_theme_colors
-from render.ascii.utils import clear_from_cursor, clear_screen, move_cursor
+from .utils import print_goodbye, print_line, str_to_coords
+from ..render import MazeRenderer
+from ..render.ascii import get_theme_chars, get_theme_colors
+from ..render.ascii.utils import clear_from_cursor, clear_screen, move_cursor
 from .keys import (
     MenuKey,
     read_algorithm_key,
@@ -270,12 +268,6 @@ class MenuManager:
                         {"R", "r"},
                         lambda: self.edit_config("seed"),
                     ),
-                    MenuItem(
-                        "Z",
-                        "Cell size",
-                        {"Z", "z"},
-                        lambda: self.edit_config("cell_size"),
-                    ),
                 ],
             )
         self.state = MenuState.CONFIG_MENU
@@ -345,7 +337,7 @@ class MenuManager:
             elif name in ("width", "height", "seed", "delay", "cell_size"):
                 raw_value = self.print_edit_config_input(name)
                 new_value = int(raw_value)
-                if name in ("width", "height"):
+                if name in ("width", "height", "seed"):
                     redirect_coords = True
                 else:
                     regenerate = False

@@ -1,7 +1,7 @@
 import sys
 import time
 
-from constants import BOLD, CYAN, GREEN, RED, RESET, YELLOW
+from ..constants import BOLD, CYAN, GREEN, RED, RESET, YELLOW
 
 
 def print_line(s: str, delay: float = 0.05) -> None:

@@ -1,18 +1,13 @@
 import sys
 import time
-
 from pydantic import ValidationError
-from config import MazeConfiguration
-from config.config import RenderMode
-from config.utils import supports_ansi
-from constants import ERROR_MAP
-from exception import MazeConfigException
-from mazegen import MazeGenerator
-from exception.render_exception import RenderError
-from player import MenuManager
-from player.utils import print_error, print_presentation
-from render.ascii.render_ascii import MazeRendererASCII
-from render.ascii.utils import clear_screen
+from src.utils import supports_ansi
+from src.constants import ERROR_MAP
+from mazegen import MazeGenerator, MazeConfiguration, MazeConfigException
+from src.exception.render_exception import RenderError
+from src.player import MenuManager
+from src.player.utils import print_error, print_presentation
+from src.render import MazeRendererASCII, clear_screen, RenderMode
 
 
 def handle_missing_arg() -> "MazeConfiguration":
@@ -54,13 +49,17 @@ def parse_maze_config() -> "MazeConfiguration":
 
 
 def main() -> None:
+    maze_generator = None
     try:
         maze_config = parse_maze_config()
         maze_generator = MazeGenerator(**maze_config.model_dump())
-        if maze_config.render_mode == RenderMode.ASCII:
+        render = None
+        if maze_config.render_mode.value == "ascii":
             render = MazeRendererASCII()
-        elif maze_config.render_mode == RenderMode.MINILIBX:
+        elif maze_config.render_mode.value == "minilibx":
             render = MazeRendererASCII()
+        if render is None:
+            raise MazeConfigException("Unvalid render mode")
         menu_manager = MenuManager(maze_config, maze_generator, render)
         is_ansi = supports_ansi()
         if is_ansi and maze_config.color:
